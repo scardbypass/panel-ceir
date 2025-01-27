@@ -1,0 +1,24 @@
+[30-Aug-2024 00:19:19 UTC] PHP Warning:  include(../config.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 3
+[30-Aug-2024 00:19:19 UTC] PHP Warning:  include(../config.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 3
+[30-Aug-2024 00:19:19 UTC] PHP Warning:  include(): Failed opening '../config.php' for inclusion (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home/scardfla/wa.scardflasher.homes/index.php on line 3
+[30-Aug-2024 00:19:19 UTC] PHP Warning:  require(../lib/header.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 81
+[30-Aug-2024 00:19:19 UTC] PHP Warning:  require(../lib/header.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 81
+[30-Aug-2024 00:19:19 UTC] PHP Fatal error:  require(): Failed opening required '../lib/header.php' (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home/scardfla/wa.scardflasher.homes/index.php on line 81
+[30-Aug-2024 00:19:22 UTC] PHP Warning:  include(../config.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 3
+[30-Aug-2024 00:19:22 UTC] PHP Warning:  include(../config.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 3
+[30-Aug-2024 00:19:22 UTC] PHP Warning:  include(): Failed opening '../config.php' for inclusion (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home/scardfla/wa.scardflasher.homes/index.php on line 3
+[30-Aug-2024 00:19:22 UTC] PHP Warning:  require(../lib/header.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 81
+[30-Aug-2024 00:19:22 UTC] PHP Warning:  require(../lib/header.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 81
+[30-Aug-2024 00:19:22 UTC] PHP Fatal error:  require(): Failed opening required '../lib/header.php' (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home/scardfla/wa.scardflasher.homes/index.php on line 81
+[30-Aug-2024 00:20:13 UTC] PHP Warning:  include(../config.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 3
+[30-Aug-2024 00:20:13 UTC] PHP Warning:  include(../config.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 3
+[30-Aug-2024 00:20:13 UTC] PHP Warning:  include(): Failed opening '../config.php' for inclusion (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home/scardfla/wa.scardflasher.homes/index.php on line 3
+[30-Aug-2024 00:20:13 UTC] PHP Warning:  require(../lib/header.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 81
+[30-Aug-2024 00:20:13 UTC] PHP Warning:  require(../lib/header.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 81
+[30-Aug-2024 00:20:13 UTC] PHP Fatal error:  require(): Failed opening required '../lib/header.php' (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home/scardfla/wa.scardflasher.homes/index.php on line 81
+[30-Aug-2024 00:20:15 UTC] PHP Warning:  include(../config.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 3
+[30-Aug-2024 00:20:15 UTC] PHP Warning:  include(../config.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 3
+[30-Aug-2024 00:20:15 UTC] PHP Warning:  include(): Failed opening '../config.php' for inclusion (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home/scardfla/wa.scardflasher.homes/index.php on line 3
+[30-Aug-2024 00:20:15 UTC] PHP Warning:  require(../lib/header.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 81
+[30-Aug-2024 00:20:15 UTC] PHP Warning:  require(../lib/header.php): failed to open stream: No such file or directory in /home/scardfla/wa.scardflasher.homes/index.php on line 81
+[30-Aug-2024 00:20:15 UTC] PHP Fatal error:  require(): Failed opening required '../lib/header.php' (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home/scardfla/wa.scardflasher.homes/index.php on line 81

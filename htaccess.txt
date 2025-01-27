@@ -1,0 +1,126 @@
+Options -Indexes
+Options All -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# FILE DIREKTORI
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # JIKA TIDAK MEMILIKI DIREKTORI .well-known
+    # RewriteRule ^(\.well-known/.*)$ $1 [L]
+
+    # JIKA MEMILIKI DIREKTORI .well-known
+    RewriteRule ^.well-known(.*)$ - [L,NC]
+
+    # AKSES URL TANPA DIAKHIRI .PHP
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^(.*)$ $1.php
+
+    # SITEMAP PHP
+    RewriteRule ^(.*)=\.xml(.*) $2.php$3 [nocase]
+</IfModule>
+
+# FILE 404 & COMPRESS TYPES
+<Files 404.shtml>
+    order allow,deny
+    allow from all
+</Files>
+
+<Files *.html>
+    SetOutputFilter DEFLATE
+</Files>
+
+# AKSES FILE CONFIG
+<files config.php>
+    order allow,deny
+    deny from all
+</files>
+
+# XSS PROTECTION
+<IfModule mod_headers.c>
+    # XSS PROTECTION FILES
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Frame-Options SAMEORIGIN
+    Header set X-Content-Type-Options nosniff
+
+    <FilesMatch ".(js|css|xml|woff2|gz|html|pdf|flv|ico|jpg|jpeg|png|gif|bmp|webp|svg|swf|tif|tiff)$">
+        Header append Vary: Accept-Encoding
+        # HEADER CACHE
+        Header set Cache-Control "max-age=31536000, public"
+        # XSS PROTECTION FILES
+        Header set X-XSS-Protection "1"
+    </FilesMatch>
+</IfModule>
+
+# COMPRESS & BROWSER BUG
+<IfModule mod_deflate.c>
+    # COMPRESS HTML CSS JAVASCRIPT TEXT XML DAN FONT
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
+    AddOutputFilterByType DEFLATE application/x-font
+    AddOutputFilterByType DEFLATE application/x-font-opentype
+    AddOutputFilterByType DEFLATE application/x-font-otf
+    AddOutputFilterByType DEFLATE application/x-font-truetype
+    AddOutputFilterByType DEFLATE application/x-font-ttf
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE font/opentype
+    AddOutputFilterByType DEFLATE font/otf
+    AddOutputFilterByType DEFLATE font/ttf
+    AddOutputFilterByType DEFLATE image/svg+xml
+    AddOutputFilterByType DEFLATE image/x-icon
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/xml
+
+    <IfModule mod_headers.c>
+        # HAPUS BUG BROWSER (INI HANYA DIBUTUHKAN DI BROWSER VERSI LAMA)
+        BrowserMatch ^Mozilla/4 gzip-only-text/html
+        BrowserMatch ^Mozilla/4\.0[678] no-gzip
+        BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+        Header append Vary User-Agent
+    </IfModule>
+</IfModule>
+
+# CACHE EXPIRED TIME
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # GAMBAR
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/bmp "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType image/ico "access plus 1 year"
+
+    # VIDEO
+    ExpiresByType video/mp4 "access plus 1 year"
+    ExpiresByType video/mpeg "access plus 1 year"
+
+    # CSS, JAVASCRIPT
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType application/x-javascript "access plus 1 year"
+
+    # LAINNYA
+    ExpiresByType application/pdf "access plus 1 month"
+    ExpiresByType application/x-shockwave-flash "access plus 1 month"
+    ExpiresByType application/json "access plus 1 year"
+
+    ExpiresDefault "access plus 1 month"
+</IfModule>

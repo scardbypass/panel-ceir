@@ -1,0 +1,78 @@
+{
+  "short_name": "KITADIGITAL.ID",
+  "name": "KITADIGITAL.ID",
+  "description": "KITADIGITAL - Distributor pulsa operator H2H termurah. Provider PPOB terbaik dan terlengkap. Pusat server panel auto follower sosial media dan subscribe youtube tercepat. Jadilah member, agen atau reseller jasa sosial media, toko online, hingga PPOB online bersama kami",
+  "icons": [
+    {
+      "src": "https:/kitadigital.id/assets/images/kitadigital/kitadigital32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https:/kitadigital.id/assets/images/kitadigital/kitadigital48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https:/kitadigital.id/assets/images/kitadigital/kitadigital72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https:/kitadigital.id/assets/images/kitadigital/kitadigital96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https:/kitadigital.id/assets/images/kitadigital/kitadigital144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https:/kitadigital.id/assets/images/kitadigital/kitadigital168.png",
+      "sizes": "168x168",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https:/kitadigital.id/assets/images/kitadigital/kitadigital180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https:/kitadigital.id/assets/images/kitadigital/kitadigital192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https:/kitadigital.id/assets/images/kitadigital/kitadigital256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https:/kitadigital.id/assets/images/kitadigital/kitadigital512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https:/kitadigital.id/assets/images/kitadigital/kitadigital690.png",
+      "sizes": "690x690",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "scope": "/",
+  "start_url": "https:/kitadigital.id/",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "theme_color": "#CC3333"
+}

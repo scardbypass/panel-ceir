@@ -1,0 +1,28 @@
+PASTIKAN MENGGUNAKAN PHP V7.4
+REKOMENDASI HOSTING "RUMAHWEB"
+
+
+*SEETING CRONSJOB
+- Silahkan Setting Cronsjob Pada Hosting Kalian
+
+*SETTING STATUS DALAM WAKTU 1 ATAU 2 MENIT (DISARANKAN 1 MENIT)
+php -q /home/usercpanel/public_html/cronsjob/status_digital.php >/dev/null 2>&1
+
+*SETTING REFUND DALAM WAKTU 2 MENIT
+
+php -q /home/usercpanel/public_html/cronsjob/refund_digital.php >/dev/null 2>&1
+
+*SETTING NOTIF DEPOSIT ANTARA 3 ATAU 5 MENIT AGAR TIDAK SPAM (DISRANKAN 5 MENIT)
+php -q /home/usercpanel/public_html/cronsjob/pending_bank.php >/dev/null 2>&1
+php -q /home/usercpanel/public_html/cronsjob/pending_emoney.php >/dev/null 2>&1
+
+
+*SETTING PROFIT / UNTUNG
+Untuk Mengatur Profit Silahkan Pergi Ke Developers Lalu Pilih Pengaturan Profit.
+
+*PEMBERITAHUAN PENTING
+Lakukan Update Layanan Pada Kelola Setiap 1 Hari Atau 2 Hari Sekali
+
+*SUPPORT / BANTUAN
+Silahkan Hubungi Di Nomor :
+wa.me/6282132687740

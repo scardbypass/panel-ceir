@@ -1,0 +1,44 @@
+/* Scroll Indicator Load */
+.progress-container{width:100%;position:fixed;top:0;left:0;z-index:9999}.progress-bar{height:5px;background:#CC3333;width:0%}
+
+/* Scroll Bar Page Element */
+html{scrollbar-width:thin}
+html::-webkit-scrollbar{width:5px;background-color:#F5F5F5}
+html::-webkit-scrollbar-thumb{background-color:#CC3333;border-radius:0px}
+.element{scrollbar-width:thin}
+.element::-webkit-scrollbar{width:5px;background-color:#F5F5F5}
+.element::-webkit-scrollbar-thumb{background-color:#CC3333;border-radius:0px}
+
+/* BacktoTop */
+.back-top{display:none;position:fixed;bottom:30px;right:30px;width:50px;height:50px;background:#333333;cursor:pointer;overflow:hidden;color:#FFFFFF;text-align:center;line-height:50px;z-index:2;border-radius:50px}
+.rtl .back-top{right:auto;left:15px}
+.back-top:after{content:'\f077';position:relative;font-family:'Font Awesome 5 Free';font-weight:900}
+.back-top:hover{opacity:.8;box-shadow:0 0 5px rgba(0,0,0,0.15)}
+
+@media screen and (max-width: 880px) {
+.nav-active .back-top{opacity:0!important}
+}
+
+/* recent postsexternal */
+#postsexternal{color:#999999;font-size:12px}
+#postsexternal img{background:#F5F5F5;float:left;margin-right:7px;height:50px;width:50px}
+#postsexternal ul{margin:0;padding:0}
+#postsexternal ul li{padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.3)}
+#postsexternal ul li: last-child{border-bottom:0}
+#postsexternal ul li a{display:block;color:#333333;font-weight:600;font-size:14px}
+
+/* recent postsexternalhome1 */
+#postsexternalhome1{color:#999999;font-size:12px}
+#postsexternalhome1 img{background:#F5F5F5;float:left;margin-right:7px;height:50px;width:50px}
+#postsexternalhome1 ul{margin:0;padding:0}
+#postsexternalhome1 ul li{padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.3)}
+#postsexternalhome1 ul li: last-child{border-bottom:0}
+#postsexternalhome1 ul li a{display:block;color:#333333;font-weight:600;font-size:14px}
+
+/* recent postsexternalhome2 */
+#postsexternalhome2{color:#999999;font-size:12px}
+#postsexternalhome2 img{background:#F5F5F5;float:left;margin-right:7px;height:50px;width:50px}
+#postsexternalhome2 ul{margin:0;padding:0}
+#postsexternalhome2 ul li{padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.3)}
+#postsexternalhome2 ul li: last-child{border-bottom:0}
+#postsexternalhome2 ul li a{display:block;color:#333333;font-weight:600;font-size:14px}
