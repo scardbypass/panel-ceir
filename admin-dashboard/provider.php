@@ -117,7 +117,7 @@ if (isset($_POST['tambah'])) {
     <div class="col-lg-12">
         <div class="card">
             <div class="card-body">
-                <h4 class="m-t-0 header-title"><b><i aria-hidden="true" class="fa fa-gears"></i>    Kelola Provider roamerimei</b></h4>        
+                <h4 class="m-t-0 header-title"><b><i aria-hidden="true" class="fa fa-gears"></i>    Kelola Provider ceirgo</b></h4>        
             <div class="table-responsive">
                     <table class="table table-striped table-bordered nowrap m-0">
 

@@ -50,7 +50,7 @@ if (isset($_POST['api_key']) AND isset($_POST['action'])) {
 
 		if ($provider == "MANUAL") {
 		        	$postdata = "";
-		    	} else if ($provider == "roamerimei") {
+		    	} else if ($provider == "ceirgo") {
 		if ($post_nometer == false) {
 			$postdata = "api_key=".$data_provider['api_key']."&action=$action&layanan=".$data_layanan['provider_id']."&target=$target$nometer";
 			} else if ($post_nometer == true) {

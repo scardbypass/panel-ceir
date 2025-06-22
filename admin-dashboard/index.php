@@ -194,7 +194,7 @@ require '../lib/header_admin.php';
                     <i class="mdi mdi-cart-plus"></i>
                 </div>-->
                 <div class="text-left">
-                    <p class="m-b-10 text-uppercase font-14 font-600">Total Order roamerimei</p>
+                    <p class="m-b-10 text-uppercase font-14 font-600">Total Order ceirgo</p>
                     <h3 class="m-b-10">
                         <span>                                            	
                             Rp. <?php echo number_format($data_pesanan_digital['total'],0,',','.'); ?> dari <?php echo $jumlah_pesanan_digital; ?> trx	

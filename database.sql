@@ -352,11 +352,11 @@ CREATE TABLE `layanan_digital` (
 --
 
 INSERT INTO `layanan_digital` (`id`, `service_id`, `provider_id`, `operator`, `layanan`, `harga`, `harga_api`, `profit`, `status`, `provider`, `tipe`, `catatan`) VALUES
-(5, 'Carrier', 'Carrier', 'Cekimei', 'Cek Carrier', 1100, 1070, 0, 'Normal', 'roamerimei', 'Digital', ''),
-(6, 'History', 'History', 'Ceir', 'Cek History slow', 4950, 4815, 0, 'Normal', 'roamerimei', 'Digital', ''),
-(7, 'Historyf', 'Historyf', 'Ceir', 'Cek History fast', 7150, 6955, 0, 'Normal', 'roamerimei', 'Digital', ''),
-(8, 'iCloud', 'iCloud', 'Cekimei', 'Cek iCloud', 550, 535, 0, 'Normal', 'roamerimei', 'Digital', ''),
-(9, 'Status', 'Status', 'Ceir', 'Cek Status', 3850, 3745, 0, 'Normal', 'roamerimei', 'Digital', ''),
+(5, 'Carrier', 'Carrier', 'Cekimei', 'Cek Carrier', 1100, 1070, 0, 'Normal', 'ceirgo', 'Digital', ''),
+(6, 'History', 'History', 'Ceir', 'Cek History slow', 4950, 4815, 0, 'Normal', 'ceirgo', 'Digital', ''),
+(7, 'Historyf', 'Historyf', 'Ceir', 'Cek History fast', 7150, 6955, 0, 'Normal', 'ceirgo', 'Digital', ''),
+(8, 'iCloud', 'iCloud', 'Cekimei', 'Cek iCloud', 550, 535, 0, 'Normal', 'ceirgo', 'Digital', ''),
+(9, 'Status', 'Status', 'Ceir', 'Cek Status', 3850, 3745, 0, 'Normal', 'ceirgo', 'Digital', ''),
 (10, 'Imel', 'Imei', 'Unlock', 'All operator 3B', 7000, 5000, 200, 'Normal', 'MANUAL', 'Digital', NULL);
 
 -- --------------------------------------------------------
@@ -869,7 +869,7 @@ CREATE TABLE `provider` (
 --
 
 INSERT INTO `provider` (`id`, `code`, `link`, `api_key`, `api_id`, `secret_key`) VALUES
-(2, 'roamerimei', 'https://ceirgo.id/api/', 'XcsILKp9Y3vRPwfprUbPzmjNsBTSFAXh', '', ''),
+(2, 'ceirgo', 'https://ceirgo.id/api/', 'XcsILKp9Y3vRPwfprUbPzmjNsBTSFAXh', '', ''),
 (3, 'WAGATEWAY', 'https://www.scardwaget.my.id', 'N6dhg8C2S5RWT1FBERTCOB1JcwccVr', '628982765556', ''),
 (5, 'MANUAL', '', '', '', '');
 

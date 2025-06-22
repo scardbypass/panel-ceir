@@ -11,9 +11,9 @@
 	// database
 	$config['db'] = array(
 		'host' => 'localhost',
-		'name' => 'Scard', //Ganti dengan nama database anda
-		'username' => 'Scard', //Ganti dengan username database anda
-		'password' => 'Scard' //Ganti dengan password database anda
+		'name' => 'pabr8932_gmj', //Ganti dengan nama database anda
+		'username' => 'pabr8932_gmj', //Ganti dengan username database anda
+		'password' => '829341@Scard' //Ganti dengan password database anda
 	);
 
 	$conn = mysqli_connect($config['db']['host'], $config['db']['username'], $config['db']['password'], $config['db']['name']);
@@ -23,8 +23,8 @@
 
 	// Konfigurasi url domain
 	$config['web'] = array(
-		'url' => 'https://ceirgo.id/', //diakhiri garis miring. ex: https://ceirgo.id/
-		'url_canonical' => 'hhttps://ceirgo.id/' //tanpa garis miring. ex: https://ceirgo.id
+		'url' => 'https://gmjroamer.my.id/', //diakhiri garis miring. ex: https://ceirgo.id/
+		'url_canonical' => 'hhttps://gmjroamer.my.id' //tanpa garis miring. ex: https://ceirgo.id
 	);
 
 	// date & time

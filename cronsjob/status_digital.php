@@ -1,6 +1,6 @@
 <?php
 require("../config.php");
-$cek_pesanan = $conn->query("SELECT * FROM pembelian_digital WHERE status IN ('','Pending','Processing') AND provider = 'roamerimei'");
+$cek_pesanan = $conn->query("SELECT * FROM pembelian_digital WHERE status IN ('','Pending','Processing') AND provider = 'ceirgo'");
 
 if (mysqli_num_rows($cek_pesanan) == 0) {
   die("Order Pending Tidak Ditemukan.");
@@ -15,7 +15,7 @@ if (mysqli_num_rows($cek_pesanan) == 0) {
       echo "Order manual<br />";
     } else {
 
-      $cek_provider = $conn->query("SELECT * FROM provider WHERE code = 'roamerimei'");
+      $cek_provider = $conn->query("SELECT * FROM provider WHERE code = 'ceirgo'");
       $data_provider = $cek_provider->fetch_assoc();
       $action = 'status';
 
@@ -69,7 +69,7 @@ if (mysqli_num_rows($cek_pesanan) == 0) {
         $status = 'Pending';
       }
 
-      $update_pesanan = $conn->query("UPDATE pembelian_digital SET keterangan = '$u_catatan', status = '$u_status' WHERE provider_oid = '$poid' AND provider = 'roamerimei'");
+      $update_pesanan = $conn->query("UPDATE pembelian_digital SET keterangan = '$u_catatan', status = '$u_status' WHERE provider_oid = '$poid' AND provider = 'ceirgo'");
       if ($update_pesanan == TRUE) {
         echo "<b>Status Order Diupdate</b> <br/>
         Provider ID: $poid <br/>

@@ -12,7 +12,7 @@ session_start();
 require_once("../config.php");
 require_once("../lib/session_login_admin.php");
 
-$cekarie = $conn->query("SELECT * FROM provider WHERE code = 'roamerimei'");
+$cekarie = $conn->query("SELECT * FROM provider WHERE code = 'ceirgo'");
 $dataarie = mysqli_fetch_assoc($cekarie);
 $action = 'layanan';
 

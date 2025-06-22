@@ -9,7 +9,7 @@ require '../lib/header_admin.php';
 $cek_mail = $conn->query("SELECT * FROM setting_web");
 $data_mail = mysqli_fetch_assoc($cek_mail);
 
-$cekdpedia = $conn->query("SELECT * FROM provider WHERE code = 'roamerimei'");
+$cekdpedia = $conn->query("SELECT * FROM provider WHERE code = 'ceirgo'");
 $datadpedia = mysqli_fetch_assoc($cekdpedia);
 $actionarie = 'profile';
 
@@ -31,7 +31,7 @@ $datawa = mysqli_fetch_assoc($cekwa);
         <div class="card">    
             <div class="card-body table-responsive">                            
                 <h4 class="m-t-0 header-title text-center">INFORMASI AKUN PUSAT</h4><hr>
-                <!--roamerimei-->
+                <!--ceirgo-->
             <?php
             $postdata = "api_key=".$datadpedia['api_key']."&action=".$actionarie."";
             $url = 'https://ceirgo.id/api/profile';
@@ -53,7 +53,7 @@ $datawa = mysqli_fetch_assoc($cekwa);
 			*/
             $json_result = json_decode($response, true);
             ?>
-                <h5 class="btn btn-primary btn-block">roamerimei.xyz</h5>
+                <h5 class="btn btn-primary btn-block">ceirgo.xyz</h5>
                 <div class="text-dark">
                     Username: <?php echo $json_result['data']['username']; ?><br />
                     Poin: <?php echo number_format($json_result['data']['poin'],0,',','.'); ?><br />
@@ -77,7 +77,7 @@ $datawa = mysqli_fetch_assoc($cekwa);
             <div class="card-body">
                 <h4 class="m-t-0 header-title text-center">UPDATE LAYANAN & KATEGORI</h4><hr>
                 <center>
-                     <b> roamerimei</b>
+                     <b> ceirgo</b>
                     <div class="center">
                         <a class="btn btn-info waves-effect w-md waves-light" href="../get/upd-all-category-digital" target="_blank">Upd. Kategori</a>
                         <a class="btn btn-info waves-effect w-md waves-light" href="../get/upd-all-layanan-digital" target="_blank">Upd. Layanan</a>
@@ -93,7 +93,7 @@ $datawa = mysqli_fetch_assoc($cekwa);
             <div class="card-body">
                 <h4 class="m-t-0 header-title text-center">HAPUS LAYANAN & KATEGORI</h4><hr>	
                 <center>
-                    <b> roamerimei</b>
+                    <b> ceirgo</b>
                     <div class="center">
                         <a class="btn btn-warning waves-effect w-md waves-light" href="../get/del-all-layanan-digital" target="_blank">Del. Digital</a>
                     </div> <br/>

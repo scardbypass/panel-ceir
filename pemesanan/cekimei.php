@@ -41,7 +41,7 @@ if (isset($_POST['pesan'])) {
 
 		if ($provider == "MANUAL") {
 		        	$postdata = "";
-		    	} else if ($provider == "roamerimei") {
+		    	} else if ($provider == "ceirgo") {
 		if ($post_nometer == false) {
 			$postdata = "api_key=".$data_provider['api_key']."&action=$action&layanan=".$data_layanan['provider_id']."&target=$post_target";
 			} else if ($post_nometer == true) {
@@ -69,10 +69,10 @@ if (isset($_POST['pesan'])) {
 		} else {
 			die("System Error!");
 		}
-		if ($provider == "roamerimei" AND $json_result['status'] == false) {
+		if ($provider == "ceirgo" AND $json_result['status'] == false) {
 			$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Order Gagal', 'pesan' => ''.$json_result['data']['pesan']);
 		} else {
-			if ($provider == "roamerimei") {
+			if ($provider == "ceirgo") {
 				$provider_oid = $json_result['data']['id'];
 			}
 			

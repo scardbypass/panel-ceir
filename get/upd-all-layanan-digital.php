@@ -20,7 +20,7 @@ $data_harga_api = mysqli_fetch_assoc($cek_harga_api);
 $harga_website_profit = $data_harga_website['harga'];
 $harga_api_profit = $data_harga_api['harga'];
 
-$cekarie = $conn->query("SELECT * FROM provider WHERE code = 'roamerimei'");
+$cekarie = $conn->query("SELECT * FROM provider WHERE code = 'ceirgo'");
 $dataarie = mysqli_fetch_assoc($cekarie);
 $action = 'layanan';
 
@@ -52,7 +52,7 @@ if ($json_result && isset($json_result['data'])) {
         $tipe = $item['tipe'];
         $catatan = $item['catatan'];
         $status = $item['status'];
-        $provider = "roamerimei";
+        $provider = "ceirgo";
         
         $rate_asli = $price * $harga_website_profit; // Menghitung harga berdasarkan profit website
         $harga_api = $price * $harga_api_profit;     // Menghitung harga berdasarkan profit API
