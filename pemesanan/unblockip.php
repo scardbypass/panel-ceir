@@ -48,7 +48,7 @@ if (isset($_POST['pesan'])) {
 			$postdata = "api_key=".$data_provider['api_key']."&action=$action&layanan=".$data_layanan['provider_id']."&target=$post_target";
 			}
 
-           $url = 'https://roamerimei.xyz/api/produk-digital'; 
+           $url = 'https://ceirgo.id/api/produk-digital'; 
                 
             $curl = curl_init();
             curl_setopt($curl, CURLOPT_URL, $url);

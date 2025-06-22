@@ -34,7 +34,7 @@ $datawa = mysqli_fetch_assoc($cekwa);
                 <!--roamerimei-->
             <?php
             $postdata = "api_key=".$datadpedia['api_key']."&action=".$actionarie."";
-            $url = 'https://roamerimei.xyz/api/profile';
+            $url = 'https://ceirgo.id/api/profile';
                 
             $curl = curl_init();
             curl_setopt($curl, CURLOPT_URL, $url);

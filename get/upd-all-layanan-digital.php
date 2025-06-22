@@ -25,7 +25,7 @@ $dataarie = mysqli_fetch_assoc($cekarie);
 $action = 'layanan';
 
 $postdata = "api_key=" . urlencode($dataarie['api_key']) . "&action=" . urlencode($action);
-$url = 'https://roamerimei.xyz/api/produk-digital';
+$url = 'https://ceirgo.id/api/produk-digital';
 
 $curl = curl_init();
 curl_setopt($curl, CURLOPT_URL, $url);

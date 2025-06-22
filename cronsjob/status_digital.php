@@ -25,7 +25,7 @@ if (mysqli_num_rows($cek_pesanan) == 0) {
         die("System error");
       }
 
-            $url = 'https://roamerimei.xyz/api/produk-digital';
+            $url = 'https://ceirgo.id/api/produk-digital';
                 
             $curl = curl_init();
             curl_setopt($curl, CURLOPT_URL, $url);

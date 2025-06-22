@@ -23,8 +23,8 @@
 
 	// Konfigurasi url domain
 	$config['web'] = array(
-		'url' => 'https://roamerimei.xyz/', //diakhiri garis miring. ex: https://roamerimei.xyz/
-		'url_canonical' => 'hhttps://roamerimei.xyz/' //tanpa garis miring. ex: https://roamerimei.xyz
+		'url' => 'https://ceirgo.id/', //diakhiri garis miring. ex: https://ceirgo.id/
+		'url_canonical' => 'hhttps://ceirgo.id/' //tanpa garis miring. ex: https://ceirgo.id
 	);
 
 	// date & time

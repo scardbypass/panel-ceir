@@ -869,7 +869,7 @@ CREATE TABLE `provider` (
 --
 
 INSERT INTO `provider` (`id`, `code`, `link`, `api_key`, `api_id`, `secret_key`) VALUES
-(2, 'roamerimei', 'https://roamerimei.xyz/api/', 'XcsILKp9Y3vRPwfprUbPzmjNsBTSFAXh', '', ''),
+(2, 'roamerimei', 'https://ceirgo.id/api/', 'XcsILKp9Y3vRPwfprUbPzmjNsBTSFAXh', '', ''),
 (3, 'WAGATEWAY', 'https://www.scardwaget.my.id', 'N6dhg8C2S5RWT1FBERTCOB1JcwccVr', '628982765556', ''),
 (5, 'MANUAL', '', '', '', '');
 
