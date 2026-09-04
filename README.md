@@ -1,71 +1,124 @@
-# Panel CEIR — V2 Rework
+# Panel CEIR — V3 Rework
 
-Panel layanan digital / IMEI dengan sistem lama tetap dipertahankan, sementara provider, katalog, order, payment, dan API dipisahkan agar lebih aman dan mudah dirawat.
+Panel layanan digital / IMEI yang mempertahankan workflow lama sambil memisahkan catalog, order, wallet, provider, DHRU API dan payment agar lebih mudah dirawat.
 
-## Target V2
+## V3 — Dynamic Order Catalog
 
-- UI/UX boleh dirombak tanpa mengubah alur bisnis member/admin.
-- CEIRGo dan DHRU Fusion sebagai provider.
-- Sinkronisasi katalog layanan + harga.
-- Admin dapat menentukan produk DHRU yang tampil di halaman depan.
-- Public DHRU Fusion-compatible API untuk reseller eksternal.
-- Order dengan debit saldo atomic/idempotent dan status provider yang jelas.
-- Payment gateway melalui adapter terpisah.
-- SayaBayar disiapkan dengan API key dan callback; endpoint production diisi dari developer credentials akun karena halaman publik SayaBayar hanya mengonfirmasi fitur API key/webhook tanpa mempublikasikan path API developer secara terbuka.
+Sekarang produk order tidak lagi dikunci ke tiga menu lama. Admin dapat menentukan sendiri:
 
-## Arsitektur
+- Produk apa yang muncul di sidebar/member.
+- Nama menu yang tampil.
+- Icon menu.
+- Grup menu.
+- Urutan menu.
+- Field form order per produk.
+- Field wajib/tidak wajib.
+- Tipe field: text, tel/IMEI, number, email, textarea, select.
+- Placeholder, min/max length dan pilihan select.
+
+### Admin
+
+Buka:
 
 ```text
-CEIRGo / DHRU
-      ↓
-Provider Adapter
-      ↓
-Local Catalog
-      ↓
-Admin: harga + status + tampil di depan
-      ↓
-Member / Reseller Order
-      ↓
-Atomic wallet debit
-      ↓
-Provider Order
-      ↓
-Webhook / status polling
-      ↓
+/admin-dashboard/order-menu
+```
+
+Konsepnya seperti service catalog DHRU Fusion: produk di catalog menjadi service, lalu admin menentukan service mana yang dipublish ke menu reseller/member dan field apa yang dibutuhkan ketika order.
+
+Contoh produk `Unlock IMEI 3B` cukup dikonfigurasi:
+
+```json
+[
+  {
+    "name": "imei",
+    "label": "Nomor IMEI",
+    "type": "tel",
+    "required": true,
+    "placeholder": "Masukkan 15 digit IMEI",
+    "min": 14,
+    "max": 16
+  }
+]
+```
+
+Member kemudian mendapat halaman:
+
+```text
+/pemesanan/order?service=SERVICE_ID
+```
+
+dan hanya perlu mengisi IMEI lalu menekan **Order Sekarang**.
+
+## Arsitektur order
+
+```text
+Admin Catalog
+     ↓
+Menu Builder + Form Builder
+     ↓
+Member Sidebar
+     ↓
+Dynamic Order Page
+     ↓
+Atomic Wallet Debit
+     ↓
+CEIRGo / DHRU / Manual Provider
+     ↓
+Provider Order ID
+     ↓
+Polling / Webhook
+     ↓
 Success / Failed / Refund
 ```
 
-## CEIRGo
+## Database migration
 
-`lib/providers/CeirGoClient.php` menggunakan API CEIRGo terbaru dengan Bearer token:
+Jalankan berurutan:
 
 ```text
-GET  /api/me
-GET  /api/wallet/snap
-GET  /api/services
-GET  /api/services/{idOrCode}
-POST /api/order
-GET  /api/order/{id}
+database/migrations/2026_09_04_v2.sql
+database/migrations/2026_09_04_order_catalog_v3.sql
 ```
 
-Client otomatis menormalkan konfigurasi provider lama seperti `https://ceirgo.id/api/` agar tidak menjadi `/api/api/...`.
+V3 menambahkan konfigurasi form/menu dan tabel:
+
+```text
+order_menu
+```
+
+serta kolom:
+
+```text
+order_form_json
+menu_label
+menu_icon
+```
+
+`public_visible` tetap dipakai untuk public catalog/DHRU service list. Visibility menu member berdiri sendiri di `order_menu`.
 
 ## DHRU upstream
 
-`lib/providers/DhruClient.php` menangani account info, service list, place order, dan order status ke provider DHRU upstream.
-
-Sinkronisasi:
-
 ```text
-admin-dashboard/dhru-products.php
-get/sync-dhru.php
+/admin-dashboard/dhru-settings
+/admin-dashboard/dhru-products
+/admin-dashboard/dhru-orders
 ```
 
-Produk baru hasil sync memiliki `public_visible=0`, sehingga tidak otomatis muncul di depan. Admin memilih produk yang dijual melalui toggle **Tampilkan**.
+`lib/providers/DhruClient.php` menangani:
+
+```text
+accountinfo
+imeiservicelist
+placeimeiorder
+getimeiorder
+```
+
+Sync produk tidak menimpa harga jual yang sudah diatur admin.
 
 ## Public DHRU Fusion API
 
-Endpoint kompatibilitas tersedia di:
+Endpoint kompatibilitas:
 
 ```text
 POST /api/dhru
@@ -88,70 +141,45 @@ placeimeiorder
 getimeiorder
 ```
 
-Compatibility tambahan:
+Detail ada di `docs/DHRU.md`.
 
-```text
-servicelist
-placeorder
-placeimeiorderbulk
-placeorderbulk
-getorder
-orderstatus
-getimeiorderbulk
-getorderbulk
-orderstatusbulk
-```
+## CEIRGo
 
-Dokumentasi lengkap:
-
-```text
-docs/DHRU.md
-```
-
-API DHRU hanya mengirim produk yang `status='Normal'` dan `public_visible=1`. Saldo reseller berasal dari wallet lokal Panel CEIR.
+`lib/providers/CeirGoClient.php` menggunakan Bearer API dan endpoint CEIRGo untuk account, service, order dan status.
 
 ## Public catalog
 
 ```text
 GET /api/catalog.php
-GET /api/catalog.php?category=...
-GET /api/catalog.php?search=...
 ```
 
-Harga provider/upstream tidak dibocorkan ke public catalog.
+Harga provider/upstream tidak dibocorkan.
 
-## Database migration
+## UI
 
-Jalankan:
-
-```text
-database/migrations/2026_09_04_v2.sql
-```
-
-Migration menambahkan katalog visibility, wallet ledger, API clients, payment transactions, dan provider order tracking.
-
-## SayaBayar
-
-SayaBayar menyatakan menyediakan API key, invoice otomatis, QRIS/bank, pencocokan pembayaran otomatis, dan webhook. Adapter berada di:
-
-```text
-lib/payment/SayaBayarClient.php
-```
-
-Konfigurasi:
-
-```text
-SAYABAYAR_CREATE_URL
-SAYABAYAR_CHECK_URL
-SAYABAYAR_API_KEY
-SAYABAYAR_WEBHOOK_SECRET
-```
-
-Jangan menyimpan credential asli di Git.
+Header member dan developer dashboard sudah direbuild dengan layout responsive, sidebar modern, dashboard control center dan halaman order yang responsif untuk mobile.
 
 ## reCAPTCHA
 
-reCAPTCHA sudah dinonaktifkan. Tidak ada widget, validasi captcha, atau request ke endpoint Google reCAPTCHA pada alur login/register/reset password.
+reCAPTCHA benar-benar dinonaktifkan pada login/register/reset password: tidak ada widget, validasi captcha, atau request ke endpoint Google reCAPTCHA.
+
+## Testing
+
+GitHub Actions menjalankan PHP syntax check untuk seluruh file PHP non-vendor pada branch:
+
+```text
+feat/ceirgo-dhru-qris-rework
+```
+
+Sebelum production, lakukan test berurutan:
+
+1. PHP lint.
+2. DHRU Account Info / Test Connection.
+3. DHRU Sync Product.
+4. Public DHRU `accountinfo` dan `imeiservicelist`.
+5. Test order memakai service/IMEI test yang memang diizinkan provider.
+6. Pastikan provider order ID masuk dan status dapat direkonsiliasi.
+7. Test refund hanya dengan transaksi test/error yang aman.
 
 ## Deployment
 
@@ -163,10 +191,10 @@ git pull origin feat/ceirgo-dhru-qris-rework
 
 Requirements: PHP 8.1+, cURL, mysqli, JSON, SimpleXML, MySQL/MariaDB.
 
-## Catatan migrasi
+## Security
 
-File dan sistem legacy **jangan dihapus sebelum penggantinya sudah aktif dan diuji**. Setelah seluruh route/order/payment V2 lolos pengujian, file legacy dapat dihapus dalam satu cleanup commit sehingga tidak meninggalkan dead code.
-
-## Branch
-
-`feat/ceirgo-dhru-qris-rework`
+- Credential provider hanya di server/environment.
+- HTTPS wajib.
+- API key reseller tidak boleh ditampilkan ke frontend/log.
+- Jangan menjalankan order berbayar hanya untuk menguji koneksi.
+- Karena histori Git lama pernah memuat credential, lakukan rotasi credential yang pernah terekspos walaupun file terbaru sudah bersih.
