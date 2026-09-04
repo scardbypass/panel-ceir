@@ -1,236 +1,32 @@
 <?php
-
 require 'session_login_admin.php';
 require 'database.php';
 ?>
-
 <!DOCTYPE html>
-<html lang="id-ID" xml:lang="id-ID">
-    <head>
-
-        <?php
-        include_once 'SEOSecretIDN-meta-all.php';
-        include_once 'SEOSecretIDN-meta-homepageonly.php';
-        ?>
-
-        <!-- App css -->
-        <link href="/assets/css/scroll.css?v<?php echo $versi; ?>" rel="stylesheet" type="text/css" async/>
-        <link href="/assets/css/style.css?v<?php echo $versi; ?>" rel="stylesheet" type="text/css" async/>
-        <link href="/assets/default/bootstrap-kmp.css?v<?php echo $versi; ?>" rel="stylesheet" type="text/css" async/> 
-        <link href="/assets/css/remixiconcolab.css?v<?php echo $versi; ?>" rel="stylesheet" type="text/css" async/>
-        <link href="/assets/css/icons.css?v<?php echo $versi; ?>" rel="stylesheet" type="text/css" async/>
-        <link href="/plugins/morris/morris.css?v<?php echo $versi; ?>" rel="stylesheet" type="text/css" async/>
-        <!-- jQuery  -->
-        <script src="/assets/js/jquery.min.js"></script>
-        <script src="/assets/js/bootstrap.bundle.min.js"></script>
-        <script src="/assets/js/waves.js"></script>
-        <script src="/assets/js/jquery.slimscroll.js"></script>
-        <!-- Counter js  -->
-        <script src="/plugins/waypoints/jquery.waypoints.min.js"></script>
-        <script src="/plugins/counterup/jquery.counterup.min.js"></script>
-        <!-- Dashboard init -->
-        <script src="/assets/pages/jquery.dashboard.js"></script>  
-        <!-- Modal-Effect -->
-        <link href="/plugins/custombox/css/custombox.min.css?v<?php echo $versi; ?>" rel="stylesheet" async/>
-        <script src="/plugins/custombox/js/custombox.min.js"></script>
-        <script src="/plugins/custombox/js/legacy.min.js"></script>
-        <!--Morris Chart CSS -->
-        <script src="/plugins/morris/morris.min.js"></script>
-        <script src="/plugins/raphael/raphael-min.js"></script> 
-        <script src="/assets/js/modernizr.min.js"></script>
-    </head>
-
-    <body>
-
-        <!-- Navigation Bar-->
-        <header id="topnav">
-            <div class="topbar-main navbar m-b-0 b-0">
-                <div class="container-fluid">
-
-                    <!-- LOGO -->
-                    <div class="logo">
-                        <a href="/" class="logo">
-                            <span class="logo-small"><i class="mdi mdi-cart"></i></span>
-                            <span class="logo-large"><i class="mdi mdi-cart"></i> <?php echo $data['short_title']; ?></span>
-                        </a>
-                    </div>
-                    <!-- End Logo container-->
-
-                    <div class="menu-extras">
-                        <ul class="nav navbar-right list-inline">
-                            <li class="dropdown user-box list-inline-item">
-                                <a href="#" class="dropdown-toggle waves-effect user-link" data-toggle="dropdown" aria-expanded="true">
-                                    <img src="/assets/images/users/user.png" alt="user-img" class="rounded-circle user-img">
-                                    <span class="pro-user-name ml-1">
-                                    <font color ='white'><?php echo $data_user['nama']; ?><i class="mdi mdi-chevron-down"></i></font>
-                                </span>
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-right arrow-dropdown-menu arrow-menu-right user-list notify-list">
-                                    <!-- title-->
-                                    <div class="dropdown-header noti-title">
-                                        <span class="text-overflow m-0"><?php echo $sess_username; ?><br/>Rp. <b><?php echo number_format($data_user['saldo'],0,',','.'); ?></b></span>
-                                    </div>
-                                    <li><a href="/user/setting" class="dropdown-item"><i aria-hidden="true" class="fa fa-user-circle"></i> Profil Saya</a></li>
-                                    <li><a href="/user/mutasi" class="dropdown-item"><i class="ri-wallet-3-fill"></i> Mutasi Saldo</a></li>
-                                    <li class="dropdown-divider"></li>
-                                    <li><a href="/user/log" class="dropdown-item"><i aria-hidden="true" class="fa fa-history"></i> Log Aktivitas</a></li>
-                                    <li><a href="/logout" class="dropdown-item"><i class="ri-shut-down-line"></i> Keluar</a></li>
-                                </ul>
-                            </li>
-                        </ul>
-                        <div class="menu-item">
-                            <!-- Mobile menu toggle-->
-                            <a class="navbar-toggle">
-                                <div class="lines">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                </div>
-                            </a>
-                            <!-- End mobile menu toggle-->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="navbar-custom">
-                <div class="container-fluid">
-                    <div id="navigation">
-                        <!-- Navigation Menu-->
-                        <ul class="navigation-menu">                            
-                            <li class="has-submenu">
-                                <a href="/admin-dashboard/"><i class="fi-air-play"></i> <span>  Dashboard</span> </a>
-                            </li>
-
-                            <li class="has-submenu">
-                                <a href="#"><i class="mdi mdi-server-security"></i> <span> Provider </span> </a>
-                                <ul class="submenu">
-                                    <li><a href="/admin-dashboard/action-provider">Kelola Layanan</a></li>
-                                    <li><a href="/admin-dashboard/provider">Kelola Provider</a></li>
-                                </ul>
-                            </li>
-
-                            <li class="has-submenu">
-                                <a href="#"><i class="mdi mdi-cart-plus"></i> <span> Layanan </span> </a>
-                                <ul class="submenu">
-                                    <li><a href="/admin-dashboard/kategori-layanan">Kategori Layanan</a></li>
-                                    <li><a href="/admin-dashboard/layanan-digital">Digital</a></li>
-                                </ul>
-                            </li>
-
-                            <li class="has-submenu">
-                                <a href="#"><i class="mdi mdi-account-multiple"></i> <span> Pengguna </span> </a>
-                                <ul class="submenu">
-                                    <li><a href="/admin-dashboard/pengguna">Kelola Pengguna</a></li>
-                                    <li><a href="/admin-dashboard/harga-pendaftaran">Harga Pendaftaran</a></li>
-                                </ul>
-                            </li>
-
-                            <li class="has-submenu">
-                                <a href="#"><i class="mdi mdi-wallet"></i> <span> Deposit </span>
-                                <?php if (mysqli_num_rows($AllDepositUsersBank) !== 0) { ?><span class="badge badge-success"><?php echo mysqli_num_rows($AllDepositUsersBank); ?></span> <?php } ?>
-                                <?php if (mysqli_num_rows($AllDepositUsersEmoney) !== 0) { ?><span class="badge badge-primary"><?php echo mysqli_num_rows($AllDepositUsersEmoney); ?></span> <?php } ?>
-                                <?php if (mysqli_num_rows($AllDepositUsersEpayment) !== 0) { ?><span class="badge badge-primary"><?php echo mysqli_num_rows($AllDepositUsersEpayment); ?></span> <?php } ?>
-                                <?php if (mysqli_num_rows($AllDepositUsersTsel) !== 0) { ?><span class="badge badge-danger"><?php echo mysqli_num_rows($AllDepositUsersTsel); ?></span> <?php } ?>
-                                <?php if (mysqli_num_rows($AllDepositUsersVoucher) !== 0) { ?><span class="badge badge-danger"><?php echo mysqli_num_rows($AllDepositUsersVoucher); ?></span> <?php } ?>
-                                <?php if (mysqli_num_rows($AllDepositUsersLain) !== 0) { ?><span class="badge badge-warning"><?php echo mysqli_num_rows($AllDepositUsersLain); ?></span> <?php } ?>
-                                </a>
-                                <ul class="submenu">
-                                    <li><a href="/admin-dashboard/metode-deposit">Kelola Metode</a></li>
-                                    <li><a href="/admin-dashboard/voucher">Kelola Voucher</a></li>
-                                    <li><a href="/admin-dashboard/deposit-bank">Deposit Bank</a></li>
-                                    <li><a href="/admin-dashboard/deposit-emoney">Deposit Emoney</a></li>
-                                    <li><a href="/admin-dashboard/deposit-epayment">Deposit Epayment</a></li>
-                                    <li><a href="/admin-dashboard/deposit-tsel">Deposit Tsel</a></li>
-                                    <li><a href="/admin-dashboard/deposit-voucher">Deposit Voucher</a></li>
-                                    <li><a href="/admin-dashboard/deposit">Deposit Lainnya</a></li>
-                                </ul>
-                            </li>
-
-                            <li class="has-submenu">
-                                <a href="#"><i class="mdi mdi-cart-plus"></i> <span> Pesanan </span> 
-                                <?php if (mysqli_num_rows($AllOrderSosmedPending) !== 0) { ?><span class="badge badge-warning"><?php echo mysqli_num_rows($AllOrderSosmedPending); ?></span> <?php } ?>
-                                <?php if (mysqli_num_rows($AllOrderSosmedProcessing) !== 0) { ?><span class="badge badge-info"><?php echo mysqli_num_rows($AllOrderSosmedProcessing); ?></span> <?php } ?>
-                                <?php if (mysqli_num_rows($AllOrderSosmedInprogress) !== 0) { ?><span class="badge badge-success"><?php echo mysqli_num_rows($AllOrderSosmedInprogress); ?></span> <?php } ?>
-                                <?php if (mysqli_num_rows($AllOrderPulsaPending) !== 0) { ?><span class="badge badge-warning"><?php echo mysqli_num_rows($AllOrderPulsaPending); ?></span> <?php } ?>
-                                <?php if (mysqli_num_rows($AllOrderPulsaProcessing) !== 0) { ?><span class="badge badge-info"><?php echo mysqli_num_rows($AllOrderPulsaProcessing); ?></span> <?php } ?>
-                                <?php if (mysqli_num_rows($AllOrderDigitalPending) !== 0) { ?><span class="badge badge-warning"><?php echo mysqli_num_rows($AllOrderDigitalPending); ?></span> <?php } ?>
-                                <?php if (mysqli_num_rows($AllOrderDigitalProcessing) !== 0) { ?><span class="badge badge-info"><?php echo mysqli_num_rows($AllOrderDigitalProcessing); ?></span> <?php } ?>
-                                </a>
-                                <ul class="submenu">
-                                    <li><a href="/admin-dashboard/digital">Digital</a></li>
-                                </ul>
-                            </li>
-
-                            <li class="has-submenu">
-                                <a href="/admin-dashboard/tiket"><i class="dripicons-ticket"></i> <span>Tiket</span>
-                                    <?php if (mysqli_num_rows($AllTiketUsersPending) !== 0) { ?><span class="badge badge-warning"><?php echo mysqli_num_rows($AllTiketUsersPending); ?></span><?php } ?> 
-                                    <?php if (mysqli_num_rows($AllTiketUsersWaiting) !== 0) { ?><span class="badge badge-info"><?php echo mysqli_num_rows($AllTiketUsersWaiting); ?></span><?php } ?>
-                                </a>
-                            </li>
-
-                            <li class="has-submenu">
-                                <a href="#"><i aria-hidden="true" class="fa fa-book"></i> <span> Laporan </span> </a>
-                                <ul class="submenu">
-                                    <li><a href="/admin-dashboard/laporan-digital"> Digital</a></li>
-                                </ul>
-                            </li>                                                                                 
-                            <li class="has-submenu">
-                                <a href="#"><i class="mdi mdi-file-multiple"></i> <span> Aktivitas </span> </a>
-                                <ul class="submenu">
-                                    <li><a href="/admin-dashboard/aktifitas-pengguna">Semua Pengguna</a></li>
-                                    <li><a href="/admin-dashboard/penggunaan-saldo">Mutasi Saldo</a></li>
-                                    <li><a href="/admin-dashboard/transfer-saldo">Transfer Saldo</a></li>
-                                </ul>
-                            </li>        
-
-                            <li class="has-submenu">
-                                <a href="#"><i aria-hidden="true" class="fa fa-list"></i> <span> Lainnya </span> </a>
-                                <ul class="submenu">
-                                    <li><a href="/admin-dashboard/berita">Kelola Berita</a></li>
-                                    <li><a href="/admin-dashboard/halaman-lain">Kelola Halaman</a></li>
-                                    <li><a href="/admin-dashboard/pengaturan-website">Pengaturan Web</a></li>
-                                </ul>
-                            </li>
-                            
-                            <li class="has-submenu">
-                                <a href="/admin-dashboard/pengaturan-profit"><i aria-hidden="true" class="mdi mdi-wallet"></i> <span> Pengaturan Profit </span> </a>
-                            </li>
-
-                        </ul>
-                        <!-- End navigation menu  -->
-
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- End Navigation Bar-->
-        <div class="wrapper">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="btn-group pull-right m-t-20">
-                            <a href="/" class="btn btn-primary btn-bordred"><i aria-hidden="true" class="fa fa-reply"></i> Dashboard</a>
-                        </div>
-                    </div>
-                </div>
-
-                <?php
-                if (isset($_SESSION['hasil'])) {
-                    ?>
-                    <div class="alert alert-<?php echo $_SESSION['hasil']['alert'] ?> alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        <strong>Respon : </strong><?php echo $_SESSION['hasil']['judul'] ?><br /> <strong>Pesan : </strong> <?php echo $_SESSION['hasil']['pesan'] ?>
-                    </div>
-                    <?php
-                    unset($_SESSION['hasil']);
-                }
-                ?>
-
-                <?php
-                $time = microtime();
-                $time = explode(' ', $time);
-                $time = $time[1] + $time[0];
-                $start = $time;
-                ?>
+<html lang="id-ID">
+<head>
+<?php include_once 'SEOSecretIDN-meta-all.php'; ?>
+<link href="/assets/css/scroll.css?v<?php echo $versi; ?>" rel="stylesheet">
+<link href="/assets/default/bootstrap-kmp.css?v<?php echo $versi; ?>" rel="stylesheet">
+<link href="/assets/default/app-kmp.css?v<?php echo $versi; ?>" rel="stylesheet">
+<link href="/assets/css/remixiconcolab.css?v<?php echo $versi; ?>" rel="stylesheet">
+<link href="/assets/css/icons.css?v<?php echo $versi; ?>" rel="stylesheet">
+<script src="/assets/js/jquery.min.js"></script>
+<style>
+:root{--a1:#0f172a;--a2:#991b1b;--ab:#dc2626;--bg:#f5f7fa}.admin-top{background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 8px 28px rgba(15,23,42,.18)}.admin-top .logo-box{background:transparent}.admin-top .logo{font-weight:800}.admin-side{background:#fff;border-right:1px solid #e7eaf0}.admin-side .menu-title{font-size:10px;letter-spacing:.12em;font-weight:850;color:#94a3b8;padding:18px 20px 7px}.admin-side a{border-radius:11px;margin:2px 9px;padding:10px 13px!important;color:#334155}.admin-side a:hover{background:#f8fafc;color:#991b1b}.admin-side .nav-second-level a{font-size:13px;margin-left:27px}.admin-content{background:var(--bg);min-height:calc(100vh - 70px)}.admin-top .btn-menu{background:transparent;border:0;color:#fff;font-size:22px}.admin-brand{display:flex;align-items:center;gap:9px;color:#fff!important;text-decoration:none}.admin-brand img{width:140px;max-height:42px;object-fit:contain}.admin-user{color:#fff}.admin-user img{width:34px;height:34px}.admin-head{padding:16px 20px;border-bottom:1px solid #edf0f4;background:#fff;display:flex;align-items:center;justify-content:space-between}.admin-head h5{margin:0;font-weight:800}.admin-head small{color:#94a3b8}@media(max-width:767px){.admin-brand img{width:120px}.admin-head{padding:12px 15px}}
+</style>
+</head>
+<body>
+<div id="wrapper">
+<header id="topnav" class="admin-top"><div class="navbar-custom"><div class="container-fluid d-flex align-items-center justify-content-between"><a href="/admin-dashboard" class="admin-brand"><img src="/assets/images/kincaimedia/webkmpanelwhite.png" alt="Admin Panel"></a><div class="d-flex align-items-center"><div class="dropdown"><a href="#" class="admin-user dropdown-toggle" data-toggle="dropdown"><img src="/assets/images/users/user.png" class="rounded-circle" alt="Profil"><span class="d-none d-sm-inline ml-1"><?php echo htmlspecialchars($data_user['nama']); ?></span></a><div class="dropdown-menu dropdown-menu-right"><div class="dropdown-header"><b><?php echo htmlspecialchars($sess_username); ?></b><br>Rp <?php echo number_format((int)$data_user['saldo'],0,',','.'); ?></div><a class="dropdown-item" href="/user/setting"><i class="fa fa-user-circle"></i> Profil</a><a class="dropdown-item" href="/"><i class="fa fa-home"></i> Member Area</a><a class="dropdown-item" href="/logout"><i class="ri-shut-down-line"></i> Keluar</a></div></div><button class="btn-menu button-menu-mobile ml-3" type="button"><i class="fe-menu"></i></button></div></div></div></header>
+<div class="left-side-menu admin-side"><div class="slimscroll-menu"><div id="sidebar-menu"><ul class="metismenu" id="side-menu">
+<li class="menu-title">CONTROL CENTER</li><li><a href="/admin-dashboard"><i class="ri-dashboard-3-line"></i><span>Dashboard</span></a></li>
+<li class="menu-title">CATALOG & ORDER</li><li><a href="/admin-dashboard/order-menu"><i class="mdi mdi-menu-open"></i><span>Menu & Form Order</span></a></li><li><a href="/admin-dashboard/layanan-digital"><i class="mdi mdi-package-variant"></i><span>Produk Digital</span></a></li><li><a href="/admin-dashboard/digital"><i class="mdi mdi-receipt-text-outline"></i><span>Order Digital</span></a></li>
+<li class="menu-title">PROVIDER</li><li><a href="javascript:void(0)"><i class="mdi mdi-server-network"></i><span>Provider</span><span class="menu-arrow"></span></a><ul class="nav-second-level nav"><li><a href="/admin-dashboard/provider">Semua Provider</a></li><li><a href="/admin-dashboard/action-provider">Kelola Layanan</a></li><li><a href="/admin-dashboard/dhru-settings">DHRU Connection</a></li><li><a href="/admin-dashboard/dhru-products">DHRU Products</a></li><li><a href="/admin-dashboard/dhru-orders">DHRU Orders</a></li></ul></li>
+<li class="menu-title">MEMBER</li><li><a href="/admin-dashboard/pengguna"><i class="ri-team-fill"></i><span>Pengguna</span></a></li><li><a href="/admin-dashboard/harga-pendaftaran"><i class="mdi mdi-account-plus-outline"></i><span>Harga Pendaftaran</span></a></li><li><a href="/admin-dashboard/transfer-saldo"><i class="mdi mdi-swap-horizontal"></i><span>Transfer Saldo</span></a></li>
+<li class="menu-title">DEPOSIT</li><li><a href="/admin-dashboard/metode-deposit"><i class="mdi mdi-wallet-outline"></i><span>Metode Deposit</span></a></li><li><a href="/admin-dashboard/deposit-bank"><i class="mdi mdi-bank-outline"></i><span>Deposit Bank</span></a></li><li><a href="/admin-dashboard/deposit-emoney"><i class="mdi mdi-cellphone"></i><span>Deposit E-Money</span></a></li><li><a href="/admin-dashboard/deposit-epayment"><i class="mdi mdi-credit-card-outline"></i><span>Deposit E-Payment</span></a></li><li><a href="/admin-dashboard/deposit"><i class="mdi mdi-cash-multiple"></i><span>Deposit Lainnya</span></a></li>
+<li class="menu-title">LAPORAN & SISTEM</li><li><a href="/admin-dashboard/laporan-digital"><i class="mdi mdi-chart-box-outline"></i><span>Laporan Digital</span></a></li><li><a href="/admin-dashboard/tiket"><i class="ri-customer-service-2-fill"></i><span>Tiket</span></a></li><li><a href="/admin-dashboard/aktifitas-pengguna"><i class="mdi mdi-history"></i><span>Aktivitas</span></a></li><li><a href="/admin-dashboard/pengaturan-website"><i class="mdi mdi-cog-outline"></i><span>Pengaturan Web</span></a></li><li><a href="/admin-dashboard/pengaturan-profit"><i class="mdi mdi-chart-line"></i><span>Pengaturan Profit</span></a></li>
+<li class="menu-title">NAVIGASI</li><li><a href="/" target="_blank"><i class="mdi mdi-open-in-new"></i><span>Lihat Website</span></a></li><li><a href="/logout"><i class="ri-shut-down-line"></i><span>Keluar</span></a></li>
+</ul></div><div class="clearfix"></div></div></div>
+<div class="content-page admin-content"><div class="content"><div class="admin-head"><div><h5>Developer Control Center</h5><small>Kelola katalog, order, provider dan reseller</small></div><a href="/admin-dashboard/order-menu" class="btn btn-primary btn-sm"><i class="mdi mdi-tune"></i> Order Builder</a></div><div class="container-fluid"><br>
+<?php if(isset($_SESSION['hasil'])): ?><div class="alert alert-<?php echo htmlspecialchars($_SESSION['hasil']['alert']); ?> alert-dismissible"><button type="button" class="close" data-dismiss="alert">&times;</button><b><?php echo htmlspecialchars($_SESSION['hasil']['judul']); ?></b><br><?php echo $_SESSION['hasil']['pesan']; ?></div><?php unset($_SESSION['hasil']); endif; ?>
