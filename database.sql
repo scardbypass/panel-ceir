@@ -1,4 +1,4 @@
--- RESTORED FROM BRANCH HISTORY
--- The canonical legacy database dump is preserved at commit c00ae10dd0ba8d6a33223e061a3df6eb22199b3c.
--- V2 schema is maintained in database/migrations/2026_09_04_v2.sql.
--- This placeholder prevents accidental use of an incomplete schema.
+-- Canonical database dump is intentionally kept in the branch history.
+-- V2 schema changes are applied through database/migrations/2026_09_04_v2.sql.
+-- DO NOT use this file alone for a fresh V2 installation until the legacy
+-- application tables have been fully audited and migrated.
