@@ -1,0 +1,21 @@
+.env
+.env.*
+!.env.example
+
+# Runtime logs / local dumps
+*.log
+error_log
+error_log.*
+
+# Local/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporary archives / backups
+*.zip
+*.tar
+*.tar.gz
+*.bak
+*.tmp
