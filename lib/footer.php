@@ -26,7 +26,6 @@
         <script src="/assets/default/responsive.bootstrap4.min.js"></script>
         <script src="/assets/default/dataTables.buttons.min.js"></script>
         <script src="/assets/default/buttons.bootstrap4.min.js"></script>
-        <script src="/assets/default/buttons.html5.min.js"></script>
         <script src="/assets/default/buttons.flash.min.js"></script>
         <script src="/assets/default/buttons.print.min.js"></script>
         <script src="/assets/default/dataTables.keyTable.min.js"></script>
@@ -34,8 +33,8 @@
         <script src="/assets/default/app.min.js"></script>
 
         <?php
-        include_once "SEOSecretIDN-schema-all.php";
-        include_once "SEOSecretIDN-javascript-all.php";
+        include_once __DIR__ . "/SEOSecretIDN-schema-all.php";
+        include_once __DIR__ . "/SEOSecretIDN-javascript-all.php";
         ?>
 
     </body>
