@@ -1,72 +1,71 @@
-
-<!--Viewport -->
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<h3>
-    <div style="text-align: center;">
-        <a href="../admin-dashboard/action-provider"><b>Kembali</b></a><br/>
-    </div>
-</h3>
-
 <?php
+declare(strict_types=1);
 session_start();
-require_once("../config.php");
-require_once("../lib/session_login_admin.php");
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../lib/session_login_admin.php';
 
-$cekarie = $conn->query("SELECT * FROM provider WHERE code = 'ceirgo'");
-$dataarie = mysqli_fetch_assoc($cekarie);
-$action = 'layanan';
+$ceirgo = $conn->query("SELECT api_key FROM provider WHERE LOWER(code)='ceirgo' LIMIT 1");
+$provider = $ceirgo ? ($ceirgo->fetch_assoc() ?: null) : null;
+if ($ceirgo) $ceirgo->free();
+if (!$provider || trim((string)$provider['api_key']) === '') {
+    http_response_code(503);
+    exit('Provider CEIRGo belum dikonfigurasi.');
+}
 
-$postdata = "api_key=" . urlencode($dataarie['api_key']) . "&action=" . urlencode($action);
-$url = 'https://ceirgo.id/api/produk-digital';
-
-$curl = curl_init();
-curl_setopt($curl, CURLOPT_URL, $url);
-curl_setopt($curl, CURLOPT_HEADER, 0);
-curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
-curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-curl_setopt($curl, CURLOPT_POST, 1);
-curl_setopt($curl, CURLOPT_POSTFIELDS, $postdata);
-
+$postdata = http_build_query(['api_key' => $provider['api_key'], 'action' => 'layanan']);
+$curl = curl_init('https://ceirgo.id/api/produk-digital');
+curl_setopt_array($curl, [
+    CURLOPT_HEADER => false,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_SSL_VERIFYHOST => 2,
+    CURLOPT_SSL_VERIFYPEER => true,
+    CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_TIMEOUT => 30,
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => $postdata,
+]);
 $response = curl_exec($curl);
+$curlError = curl_error($curl);
 curl_close($curl);
 
-$json_result = json_decode($response, true);
+if ($response === false) exit('<b>Gagal mendapatkan data dari API.</b><br/>' . htmlspecialchars($curlError, ENT_QUOTES, 'UTF-8'));
+$json = json_decode($response, true);
+if (!is_array($json) || !isset($json['data']) || !is_array($json['data'])) {
+    exit('<b>Gagal mendapatkan data dari API.</b><br/>Respons API tidak valid.');
+}
+?>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<h3><div style="text-align:center"><a href="../admin-dashboard/action-provider"><b>Kembali</b></a></div></h3>
+<?php
+foreach ($json['data'] as $item) {
+    $kategori = trim((string)($item['operator'] ?? ''));
+    $kode = $kategori;
+    $tipe = trim((string)($item['tipe'] ?? ''));
+    if ($kategori === '' || $tipe === '') continue;
 
-// Periksa apakah respons API valid
-if ($json_result && isset($json_result['data'])) {
-    foreach ($json_result['data'] as $item) {
-        $kategori = htmlspecialchars($item['operator']);
-        $kode = htmlspecialchars($item['operator']);
-        $tipe = htmlspecialchars($item['tipe']);
+    $stmt = $conn->prepare("SELECT id FROM kategori_layanan WHERE nama=? AND tipe=? LIMIT 1");
+    if (!$stmt) { echo '<b>Query gagal.</b><br/>'; continue; }
+    $stmt->bind_param('ss', $kategori, $tipe);
+    $stmt->execute();
+    $stmt->store_result();
+    $exists = $stmt->num_rows > 0;
+    $stmt->close();
 
-        // Menggunakan prepared statement untuk mencegah SQL Injection
-        $stmt = $conn->prepare("SELECT * FROM kategori_layanan WHERE nama = ? AND tipe = ?");
-        $stmt->bind_param("ss", $kategori, $tipe);
-        $stmt->execute();
-        $result = $stmt->get_result();
+    $safeKategori = htmlspecialchars($kategori, ENT_QUOTES, 'UTF-8');
+    $safeKode = htmlspecialchars($kode, ENT_QUOTES, 'UTF-8');
+    $safeTipe = htmlspecialchars($tipe, ENT_QUOTES, 'UTF-8');
 
-        if ($result->num_rows > 0) {
-            echo "<b>Kategori Sudah Ada</b> <br/>
-            Kategori: $kategori <br/>
-            Kode: $kode <br/>
-            Tipe: $tipe <br/><br/>";
-        } else {
-            // Memasukkan ke Database
-            $insert_stmt = $conn->prepare("INSERT INTO kategori_layanan (nama, kode, tipe) VALUES (?, ?, ?)");
-            $insert_stmt->bind_param("sss", $kategori, $kode, $tipe);
-            if ($insert_stmt->execute()) {
-                echo "<b>Kategori Disimpan</b> <br/>
-                Kategori: $kategori <br/>
-                Kode: $kode <br/>
-                Tipe: $tipe <br/><br/>";
-            } else {
-                echo "<b>Kategori Gagal Disimpan</b> <br/>" . mysqli_error($conn) . "<br/>";
-            }
-        }
-        $stmt->close();
+    if ($exists) {
+        echo "<b>Kategori Sudah Ada</b><br/>Kategori: {$safeKategori}<br/>Kode: {$safeKode}<br/>Tipe: {$safeTipe}<br/><br/>";
+        continue;
     }
-} else {
-    echo "<b>Gagal mendapatkan data dari API.</b><br/>";
+
+    $insert = $conn->prepare("INSERT INTO kategori_layanan (nama,kode,tipe) VALUES (?,?,?)");
+    if ($insert && $insert->bind_param('sss', $kategori, $kode, $tipe) && $insert->execute()) {
+        echo "<b>Kategori Disimpan</b><br/>Kategori: {$safeKategori}<br/>Kode: {$safeKode}<br/>Tipe: {$safeTipe}<br/><br/>";
+    } else {
+        echo '<b>Kategori Gagal Disimpan</b><br/>' . htmlspecialchars($insert ? $insert->error : $conn->error, ENT_QUOTES, 'UTF-8') . '<br/>';
+    }
+    if ($insert) $insert->close();
 }
 ?>
