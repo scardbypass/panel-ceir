@@ -1,2 +1,2 @@
--- DATABASE DUMP RESTORED VIA GIT HISTORY
--- V2 additions live in database/migrations/2026_09_04_v2.sql.
+-- Canonical dump is available in Git history at commit c00ae10dd0ba8d6a33223e061a3df6eb22199b3c.
+-- V2 schema: database/migrations/2026_09_04_v2.sql
