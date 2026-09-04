@@ -39,8 +39,8 @@ if (!mysqli_set_charset($conn, 'utf8mb4')) {
 }
 
 $config['web'] = [
-    'url' => rtrim(getenv('APP_URL') ?: 'http://scard-project.id/', '/') . '/',
-    'url_canonical' => rtrim(getenv('APP_CANONICAL_URL') ?: 'http://scard-project.id', '/'),
+    'url' => rtrim(getenv('APP_URL') ?: 'https://scard-project.id/', '/') . '/',
+    'url_canonical' => rtrim(getenv('APP_CANONICAL_URL') ?: 'https://scard-project.id', '/'),
 ];
 
 $date = date('Y-m-d');
