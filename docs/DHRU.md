@@ -1,22 +1,111 @@
-# DHRU Fusion API — Panel CEIR
+# DHRU Integration — Panel CEIR V2
 
-Dokumentasi endpoint DHRU Fusion yang disediakan Panel CEIR untuk reseller eksternal.
+Dokumentasi ini menjelaskan **dua sisi DHRU** pada Panel CEIR:
 
-## Endpoint
+1. **DHRU Upstream Provider** — akun provider DHRU milik panel, tempat order diteruskan.
+2. **DHRU Server/API** — endpoint Panel CEIR yang dipakai reseller eksternal.
 
-Semua endpoint berikut mengarah ke handler yang sama:
+Jangan mencampur kredensial kedua sisi tersebut.
+
+---
+
+## 1. DHRU Upstream Provider
+
+Admin → **Provider Center → Setting DHRU**.
+
+Isi:
+
+```text
+API URL   = https://provider-dhru.example
+Username  = username provider
+API Key   = API access key provider
+Status    = Active
+```
+
+Panel menggunakan DHRU Fusion API untuk:
+
+- `accountinfo`
+- `imeiservicelist`
+- `placeimeiorder`
+- `getimeiorder`
+
+Tombol **Test Connection & Account Info** harus digunakan sebelum sync produk.
+
+### Sync produk
+
+Admin → **Produk DHRU → Sync**.
+
+Sync mengambil service dari upstream dan menyimpannya ke `layanan_digital`.
+
+Perilaku sync:
+
+- produk baru dibuat `public_visible=0`
+- harga provider disimpan di `harga_api`
+- harga jual produk lama tidak ditimpa
+- group/kategori provider disimpan
+- `Requires` disimpan untuk kebutuhan form order
+- perubahan harga provider memperbarui `harga_api`
+- produk yang tidak lagi dikirim upstream tidak otomatis dihapus
+
+---
+
+## 2. Kelola Produk
+
+Admin → **Produk DHRU**.
+
+Setiap produk mempunyai:
+
+| Field | Fungsi |
+|---|---|
+| Service ID | ID service DHRU upstream |
+| Group | kategori/group DHRU |
+| Nama | nama produk yang tampil |
+| Harga Provider | modal dari upstream |
+| Harga Jual | harga yang dibayar reseller |
+| Profit | Harga Jual - Harga Provider |
+| Status | Normal / Gangguan |
+| Publish | boleh tampil ke reseller atau tidak |
+| Catatan | informasi tambahan |
+
+Produk dapat ditambahkan manual jika diperlukan.
+
+**Publish tidak sama dengan aktif provider.** Produk hanya diberikan ke reseller jika:
+
+```text
+status = Normal
+public_visible = 1
+```
+
+---
+
+## 3. DHRU Server untuk Reseller
+
+Reseller memakai:
 
 ```text
 POST https://DOMAIN-ANDA/api/dhru
+```
+
+Alias kompatibilitas:
+
+```text
 POST https://DOMAIN-ANDA/api/dhru/index.php
 POST https://DOMAIN-ANDA/api/index.php
 ```
 
-Gunakan `POST` dengan `application/x-www-form-urlencoded` atau `multipart/form-data`.
+Content-Type:
 
-## Authentication
+```text
+application/x-www-form-urlencoded
+```
 
-Setiap request wajib mengirim:
+atau:
+
+```text
+multipart/form-data
+```
+
+Authentication:
 
 ```text
 username=USERNAME_RESELLER
@@ -24,48 +113,18 @@ apiaccesskey=API_KEY_RESELLER
 requestformat=JSON
 ```
 
-Alias yang kompatibel:
-
-- `username`: `api_username` atau `user`
-- `apiaccesskey`: `key`, `api_key`, `apikey`, atau `accesskey`
-
-API key V2 disimpan sebagai SHA-256 hash di tabel `api_clients`. Sistem juga masih menerima `users.api_key` untuk kompatibilitas reseller lama.
-
-> Jangan menaruh API key di frontend, JavaScript, screenshot, log, atau repository Git.
-
-## Response format
-
-Default adalah JSON. Untuk XML kirim:
+Alias `apiaccesskey` yang diterima:
 
 ```text
-requestformat=XML
+key
+api_key
+apikey
+accesskey
 ```
 
-Success:
+---
 
-```json
-{
-  "SUCCESS": [
-    {
-      "MESSAGE": "..."
-    }
-  ]
-}
-```
-
-Error:
-
-```json
-{
-  "ERROR": [
-    {
-      "MESSAGE": "..."
-    }
-  ]
-}
-```
-
-## 1. Account Info
+## 4. Account Info
 
 Request:
 
@@ -87,7 +146,6 @@ Response:
       "AccountInfo": {
         "credit": "150000.00",
         "creditraw": 150000,
-        "mail": "reseller@example.com",
         "currency": "IDR",
         "username": "USERNAME_RESELLER"
       }
@@ -96,9 +154,11 @@ Response:
 }
 ```
 
-`creditraw` adalah saldo numerik reseller dalam Rupiah.
+`creditraw` adalah saldo numerik dalam Rupiah.
 
-## 2. Service List
+---
+
+## 5. Service List
 
 Action:
 
@@ -112,7 +172,7 @@ Alias:
 servicelist
 ```
 
-Request:
+Contoh:
 
 ```bash
 curl -X POST 'https://DOMAIN-ANDA/api/dhru' \
@@ -122,14 +182,9 @@ curl -X POST 'https://DOMAIN-ANDA/api/dhru' \
   -d 'action=imeiservicelist'
 ```
 
-Hanya produk yang:
+Hanya produk yang `Normal + public_visible=1` yang dikirim.
 
-- `status = Normal`
-- `public_visible = 1`
-
-yang dikirim ke reseller. Jadi admin dapat menyembunyikan produk tanpa menghapus katalog.
-
-Response inti:
+Response:
 
 ```json
 {
@@ -166,9 +221,11 @@ Response inti:
 }
 ```
 
-Gunakan `SERVICEID` dari response ketika membuat order.
+`SERVICEID` adalah ID yang digunakan saat order.
 
-## 3. Place IMEI Order
+---
+
+## 6. Place IMEI Order
 
 Action:
 
@@ -176,15 +233,7 @@ Action:
 placeimeiorder
 ```
 
-Alias:
-
-```text
-placeorder
-```
-
-`parameters` menerima JSON atau XML.
-
-### JSON
+Request:
 
 ```bash
 curl -X POST 'https://DOMAIN-ANDA/api/dhru' \
@@ -195,17 +244,7 @@ curl -X POST 'https://DOMAIN-ANDA/api/dhru' \
   -d 'parameters={"ID":"123","IMEI":"356938035643809"}'
 ```
 
-### XML
-
-```text
-<PARAMETERS>
-  <ID>123</ID>
-  <QNT>1</QNT>
-  <IMEI>356938035643809</IMEI>
-</PARAMETERS>
-```
-
-Response:
+Response diterima reseller:
 
 ```json
 {
@@ -218,31 +257,50 @@ Response:
 }
 ```
 
-`REFERENCEID` adalah ID order lokal Panel CEIR. ID tersebut digunakan untuk polling status.
+`REFERENCEID` adalah ID order lokal Panel CEIR.
 
-### Alur pembayaran order
+---
 
-1. Panel memvalidasi reseller dan service.
-2. Panel membuat order lokal.
-3. Saldo reseller didebit secara atomic melalui wallet ledger V2.
-4. Order diteruskan ke provider produk (`ceirgo`, `DHRU`, atau `manual`).
-5. Jika provider menolak secara jelas, saldo direfund.
-6. Jika koneksi provider timeout, order tidak langsung direfund agar tidak terjadi double-spend setelah provider sebenarnya menerima order.
-7. Status dapat direkonsiliasi melalui `getimeiorder`.
+## 7. Order Flow
 
-## 4. Get IMEI Order
+```text
+Reseller
+   │
+   ▼
+DHRU API Panel CEIR
+   │
+   ├── authenticate
+   ├── validate service
+   ├── validate target
+   ├── create local order
+   │
+   ▼
+Atomic wallet debit
+   │
+   ▼
+DHRU Upstream
+   │
+   ▼
+Provider Order ID
+   │
+   ▼
+Status reconciliation
+   │
+   ├── Processing
+   ├── Success
+   └── Error → Refund
+```
+
+Timeout provider **tidak otomatis dianggap gagal**, karena provider bisa saja sudah menerima order tetapi response hilang.
+
+---
+
+## 8. Get Order Status
 
 Action:
 
 ```text
 getimeiorder
-```
-
-Alias:
-
-```text
-getorder
-orderstatus
 ```
 
 Request:
@@ -256,108 +314,171 @@ curl -X POST 'https://DOMAIN-ANDA/api/dhru' \
   -d 'parameters={"ID":"1001"}'
 ```
 
-Status:
+Status kompatibilitas:
 
 | STATUS | Arti |
 |---:|---|
-| `0` | Pending / waiting |
-| `1` | Processing |
-| `3` | Error / rejected |
-| `4` | Success |
+| 0 | Pending |
+| 1 | Processing |
+| 3 | Error / rejected |
+| 4 | Success |
 
-Status `partial` dikembalikan sebagai processing (`1`) agar kompatibel dengan client DHRU lama.
+---
 
-## 5. Bulk compatibility
+## 9. Bulk API
 
-Didukung:
+Compatibility action:
 
 ```text
 placeimeiorderbulk
-placeorderbulk
 getimeiorderbulk
+```
+
+Alias lama juga diterima:
+
+```text
+placeorderbulk
 getorderbulk
 orderstatusbulk
 ```
 
-Format bulk mengikuti array JSON parameter. Untuk integrasi baru, satu order per request lebih mudah dilacak dan direkonsiliasi.
+Untuk integrasi baru, satu order/request lebih mudah direkonsiliasi.
 
-## API key reseller V2
+---
 
-Migration:
+## 10. API Key Reseller
 
-```text
-database/migrations/2026_09_04_v2.sql
-```
-
-Tabel:
+V2 menggunakan tabel:
 
 ```text
 api_clients
 ```
 
-Kolom utama:
+Raw key tidak perlu disimpan.
 
-```text
-id
-user_id
-api_key_hash
-label
-status
-last_used_at
-created_at
-```
-
-Generate hash untuk key yang akan disimpan:
+Generate hash:
 
 ```bash
 php -r 'echo hash("sha256", "API_KEY_ASLI"), PHP_EOL;'
 ```
 
-Lalu masukkan hash ke `api_clients` untuk `user_id` reseller terkait. Raw API key diberikan hanya kepada reseller.
+Simpan hash ke `api_clients.api_key_hash` untuk user reseller terkait.
 
-## Contoh pengujian
+Untuk kompatibilitas reseller lama, `users.api_key` masih dapat diterima sampai migrasi selesai.
 
-### Cek saldo
+---
 
-```bash
-curl -s -X POST 'https://DOMAIN-ANDA/api/dhru' \
-  -d 'username=USERNAME_RESELLER' \
-  -d 'apiaccesskey=API_KEY_RESELLER' \
-  -d 'requestformat=JSON' \
-  -d 'action=accountinfo'
-```
+## 11. Database
 
-### Cek produk
-
-```bash
-curl -s -X POST 'https://DOMAIN-ANDA/api/dhru' \
-  -d 'username=USERNAME_RESELLER' \
-  -d 'apiaccesskey=API_KEY_RESELLER' \
-  -d 'requestformat=JSON' \
-  -d 'action=imeiservicelist'
-```
-
-### Test order
-
-Gunakan service ID dan IMEI test yang memang diizinkan provider. Jangan menjalankan order berbayar hanya untuk menguji koneksi.
-
-## Integrasi panel reseller
-
-Pada panel DHRU Fusion, isi:
+Migration utama:
 
 ```text
-API URL  : https://DOMAIN-ANDA/api/dhru
-Username : USERNAME_RESELLER
-API Key  : API_KEY_RESELLER
+database/migrations/2026_09_04_v2.sql
+database/migrations/2026_09_04_dhru_admin.sql
 ```
 
-Jika client otomatis menambahkan `/api/index.php`, gunakan base URL/domain sesuai petunjuk client tersebut.
+Field tambahan katalog:
 
-## Catatan keamanan
+```text
+public_visible
+sort_order
+image_url
+updated_at
+dhru_group
+service_type
+requires_json
+cost_updated_at
+```
 
-- HTTPS wajib digunakan.
-- API key tidak boleh dicetak ke response atau halaman admin.
-- Produk yang belum siap dijual harus `public_visible=0`.
-- Jangan expose `harga_api` provider upstream melalui public catalog website.
-- Backup database sebelum menjalankan migration.
-- Setelah migrasi key selesai, legacy `users.api_key` dapat dinonaktifkan dalam cleanup berikutnya.
+Tabel order/provider:
+
+```text
+provider_orders_v2
+```
+
+Tabel API reseller:
+
+```text
+api_clients
+```
+
+Wallet:
+
+```text
+wallet_ledger
+```
+
+---
+
+## 12. Admin URLs
+
+```text
+/admin-dashboard/action-provider
+```
+
+Provider Center.
+
+```text
+/admin-dashboard/dhru-settings
+```
+
+Setting DHRU upstream.
+
+```text
+/admin-dashboard/dhru-products
+```
+
+Sync, tambah, edit, pricing dan publish produk.
+
+```text
+/admin-dashboard/dhru-orders
+```
+
+Monitoring order DHRU.
+
+```text
+/api/dhru
+```
+
+DHRU Server API reseller.
+
+---
+
+## 13. Security
+
+- Gunakan HTTPS.
+- Jangan commit API key.
+- Jangan tampilkan API key pada UI publik.
+- Jangan expose `harga_api` pada public catalog.
+- Gunakan API key hash untuk reseller baru.
+- Batasi endpoint DHRU dengan rate limit pada deployment production.
+- Backup database sebelum migration.
+- Rotasi credential provider jika pernah bocor.
+
+## 14. Deployment
+
+Setelah pull:
+
+```bash
+git pull origin feat/ceirgo-dhru-qris-rework
+```
+
+Jalankan migration database:
+
+```text
+database/migrations/2026_09_04_v2.sql
+database/migrations/2026_09_04_dhru_admin.sql
+```
+
+Kemudian:
+
+1. Buka Provider Center.
+2. Buka Setting DHRU.
+3. Simpan credential upstream.
+4. Test Connection.
+5. Sync Produk.
+6. Atur harga jual.
+7. Publish produk yang siap.
+8. Test `accountinfo` dari panel reseller.
+9. Test `imeiservicelist`.
+10. Gunakan order test yang memang diizinkan provider.
