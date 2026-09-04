@@ -21,8 +21,8 @@
         <script src="/assets/js/jquery.app.js"></script>
 
         <?php
-        include_once "SEOSecretIDN-schema-all.php";
-        include_once "SEOSecretIDN-javascript-admin.php";
+        include_once __DIR__ . "/SEOSecretIDN-schema-all.php";
+        include_once __DIR__ . "/SEOSecretIDN-javascript-admin.php";
         ?>
 
     </body>
