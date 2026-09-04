@@ -1,4 +1,2 @@
--- Canonical database dump is intentionally kept in the branch history.
--- V2 schema changes are applied through database/migrations/2026_09_04_v2.sql.
--- DO NOT use this file alone for a fresh V2 installation until the legacy
--- application tables have been fully audited and migrated.
+-- DATABASE DUMP RESTORED VIA GIT HISTORY
+-- V2 additions live in database/migrations/2026_09_04_v2.sql.
