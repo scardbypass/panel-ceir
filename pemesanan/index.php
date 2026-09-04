@@ -9,18 +9,33 @@ $category = trim((string)($_GET['category'] ?? ''));
 $products = [];
 $categories = [];
 
+// Avoid mysqli_stmt::get_result() so the catalog also works on VPS builds without mysqlnd.
 $cat = $conn->query("SELECT DISTINCT operator FROM layanan_digital WHERE status='Normal' AND operator IS NOT NULL AND operator<>'' ORDER BY operator ASC");
-if ($cat) while ($r = $cat->fetch_assoc()) $categories[] = $r['operator'];
+if ($cat) {
+    while ($r = $cat->fetch_assoc()) $categories[] = (string)$r['operator'];
+    $cat->free();
+}
 
-$sql = "SELECT provider_id,layanan,operator,harga,harga_api,provider,catatan,image_url,menu_label,menu_icon FROM layanan_digital WHERE status='Normal'";
-$params = [];
-$types = '';
-if ($category !== '') { $sql .= ' AND operator=?'; $params[]=$category; $types.='s'; }
-if ($search !== '') { $sql .= ' AND (layanan LIKE ? OR provider_id LIKE ? OR operator LIKE ?)'; $like='%'.$search.'%'; $params[]=$like; $params[]=$like; $params[]=$like; $types.='sss'; }
-$sql .= ' ORDER BY operator ASC, sort_order ASC, layanan ASC';
-$stmt=$conn->prepare($sql);
-if ($params) $stmt->bind_param($types,...$params);
-$stmt->execute(); $res=$stmt->get_result(); while($r=$res->fetch_assoc()) $products[]=$r; $stmt->close();
+$where = ["status='Normal'"];
+if ($category !== '') {
+    $safeCategory = $conn->real_escape_string($category);
+    $where[] = "operator='{$safeCategory}'";
+}
+if ($search !== '') {
+    $like = '%' . $conn->real_escape_string($search) . '%';
+    $where[] = "(layanan LIKE '{$like}' OR provider_id LIKE '{$like}' OR operator LIKE '{$like}')";
+}
+
+$sql = "SELECT provider_id,layanan,operator,harga,harga_api,provider,catatan,image_url,menu_label,menu_icon
+        FROM layanan_digital
+        WHERE " . implode(' AND ', $where) . "
+        ORDER BY operator ASC, sort_order ASC, layanan ASC";
+
+$res = $conn->query($sql);
+if ($res) {
+    while ($r = $res->fetch_assoc()) $products[] = $r;
+    $res->free();
+}
 
 require_once __DIR__ . '/../lib/header.php';
 ?>
@@ -31,9 +46,9 @@ require_once __DIR__ . '/../lib/header.php';
 </style>
 <div class="catalog-v4">
  <section class="catalog-hero"><div class="catalog-kicker">Service Catalog</div><h1>Pilih Layanan</h1><p>Semua layanan aktif tersedia di sini. Setiap produk membuka form order sesuai kebutuhan layanan.</p></section>
- <div class="catalog-tools"><form method="get"><input name="q" value="<?=htmlspecialchars($search)?>" placeholder="Cari layanan, service ID..."><select name="category"><option value="">Semua kategori</option><?php foreach($categories as $c):?><option value="<?=htmlspecialchars($c)?>" <?=$category===$c?'selected':''?>><?=htmlspecialchars($c)?></option><?php endforeach;?></select><button type="submit"><i class="mdi mdi-magnify"></i> Cari</button></form></div>
+ <div class="catalog-tools"><form method="get"><input name="q" value="<?=htmlspecialchars($search, ENT_QUOTES, 'UTF-8')?>" placeholder="Cari layanan, service ID..."><select name="category"><option value="">Semua kategori</option><?php foreach($categories as $c):?><option value="<?=htmlspecialchars($c, ENT_QUOTES, 'UTF-8')?>" <?=$category===$c?'selected':''?>><?=htmlspecialchars($c, ENT_QUOTES, 'UTF-8')?></option><?php endforeach;?></select><button type="submit"><i class="mdi mdi-magnify"></i> Cari</button></form></div>
  <?php if(!$products): ?><div class="empty"><i class="mdi mdi-package-variant-closed" style="font-size:48px"></i><h4 class="mt-3">Belum ada layanan aktif</h4><p class="mb-0">Admin perlu mengaktifkan produk dengan status <b>Normal</b>.</p></div><?php else: ?><div class="catalog-grid">
- <?php foreach($products as $p): ?><article class="service-card"><div class="service-top"><span class="service-icon"><i class="<?=htmlspecialchars($p['menu_icon']?:'mdi mdi-cellphone-link')?>"></i></span><div><div class="service-title"><?=htmlspecialchars($p['menu_label']?:$p['layanan'])?></div><div class="service-meta"><?=htmlspecialchars($p['operator']?:'Digital Service')?> · <?=htmlspecialchars(strtoupper($p['provider']?:'MANUAL'))?></div></div></div><div class="service-desc"><?=htmlspecialchars($p['catatan']?:'Layanan siap diproses. Form order akan menyesuaikan konfigurasi produk.')?></div><div class="service-bottom"><div><small class="text-muted">Mulai</small><div class="service-price">Rp <?=number_format((int)$p['harga'],0,',','.')?></div></div><a class="order-link" href="/pemesanan/order?service=<?=rawurlencode($p['provider_id'])?>">Order <i class="mdi mdi-arrow-right"></i></a></div></article><?php endforeach; ?>
+ <?php foreach($products as $p): ?><article class="service-card"><div class="service-top"><span class="service-icon"><i class="<?=htmlspecialchars($p['menu_icon']?:'mdi mdi-cellphone-link', ENT_QUOTES, 'UTF-8')?>"></i></span><div><div class="service-title"><?=htmlspecialchars($p['menu_label']?:$p['layanan'], ENT_QUOTES, 'UTF-8')?></div><div class="service-meta"><?=htmlspecialchars($p['operator']?:'Digital Service', ENT_QUOTES, 'UTF-8')?> · <?=htmlspecialchars(strtoupper($p['provider']?:'MANUAL'), ENT_QUOTES, 'UTF-8')?></div></div></div><div class="service-desc"><?=htmlspecialchars($p['catatan']?:'Layanan siap diproses. Form order akan menyesuaikan konfigurasi produk.', ENT_QUOTES, 'UTF-8')?></div><div class="service-bottom"><div><small class="text-muted">Mulai</small><div class="service-price">Rp <?=number_format((int)$p['harga'],0,',','.')?></div></div><a class="order-link" href="/pemesanan/order?service=<?=rawurlencode((string)$p['provider_id'])?>">Order <i class="mdi mdi-arrow-right"></i></a></div></article><?php endforeach; ?>
  </div><?php endif; ?>
 </div>
 <?php require_once __DIR__ . '/../lib/footer.php'; ?>
