@@ -13,7 +13,7 @@ $config['db'] = array(
     'host' => getenv('DB_HOST') ?: 'localhost',
     'name' => getenv('DB_NAME') ?: 'scar1544_ppob',
     'username' => getenv('DB_USERNAME') ?: 'scar1544_ppob',
-    'password' => getenv('DB_PASSWORD') ?: 'scar1544_pppb'
+    'password' => getenv('DB_PASSWORD') ?: 'scar1544_ppob'
 );
 
 $conn = mysqli_connect(
