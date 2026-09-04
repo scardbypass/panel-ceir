@@ -3,17 +3,18 @@
 	error_reporting(0);
 
 	// status
-	$maintenance = 0; //Ganti jadi 1 jika sedang MT
+	$maintenance = (int) (getenv('APP_MAINTENANCE') !== false ? getenv('APP_MAINTENANCE') : 0);
 	if($maintenance == 1) {
-		header("location: /offline"); //Ganti dengan landing page maintenance Anda
+		header("location: /offline");
+		exit;
 	}
 
-	// database
+	// database - configure through VPS environment variables (.env is not committed)
 	$config['db'] = array(
-		'host' => 'localhost',
-		'name' => 'pabr8932_gmj', //Ganti dengan nama database anda
-		'username' => 'pabr8932_gmj', //Ganti dengan username database anda
-		'password' => '829341@Scard' //Ganti dengan password database anda
+		'host' => getenv('DB_HOST') ?: 'localhost',
+		'name' => getenv('DB_NAME') ?: '',
+		'username' => getenv('DB_USERNAME') ?: '',
+		'password' => getenv('DB_PASSWORD') ?: ''
 	);
 
 	$conn = mysqli_connect($config['db']['host'], $config['db']['username'], $config['db']['password'], $config['db']['name']);
@@ -21,36 +22,33 @@
 		die("Koneksi Gagal : ".mysqli_connect_error());
 	}
 
-	// Konfigurasi url domain
+	// Konfigurasi URL domain
 	$config['web'] = array(
-		'url' => 'https://gmjroamer.my.id/', //diakhiri garis miring. ex: https://ceirgo.id/
-		'url_canonical' => 'hhttps://gmjroamer.my.id' //tanpa garis miring. ex: https://ceirgo.id
+		'url' => rtrim(getenv('APP_URL') ?: 'http://localhost/', '/') . '/',
+		'url_canonical' => rtrim(getenv('APP_CANONICAL_URL') ?: 'http://localhost', '/')
 	);
 
 	// date & time
 	$date = date("Y-m-d");
 	$time = date("H:i:s");
 
-	// API google captcha v2 Checkbox: https://www.google.com/recaptcha/admin/create
+	// Google reCAPTCHA v2 Checkbox
 	$config['captcha'] = array(
-		'sitekey' => '6LdpOj8qAAAAAPoXpPJDWd2MhRkWJdFLv1_G-MDH',
-		'secretkey' => '6LdpOj8qAAAAAH8V0Hn96Gk5mN0moBS9OuMhcu8H'
+		'sitekey' => getenv('RECAPTCHA_SITEKEY') ?: '',
+		'secretkey' => getenv('RECAPTCHA_SECRETKEY') ?: ''
 	);
 
-	// Email SMTP, Keamanan SSL, PORT 465
-	// EMAIL MAILER INI DIREKOMENDASIKAN MENGGUNAKAN EMAIL SMTP HOSTING
-	// INFORMASI PORT DAN HOST DIDAPAT SETELAH MEMBUAT EMAIL DI CPANEL
+	// Email SMTP
 	$config['email'] = array(
-		'enkripsi' => 'ssl', //ssl atau tls, direkomendasikan ssl
-		'mailhost' => 'mail.opotopup.com', //host mail, ex: mail.kincaiseluler.my.id
-		'mailport' => '465', //port email, ex: 465
-		'mailusername' => 'verifikasi@opotopup.com', //email, ex: support@kincaiseluler.my.id
-		'mailpassword' => 'Rahasiaku123' //password email
+		'enkripsi' => getenv('SMTP_ENCRYPTION') ?: 'ssl',
+		'mailhost' => getenv('SMTP_HOST') ?: '',
+		'mailport' => getenv('SMTP_PORT') ?: '465',
+		'mailusername' => getenv('SMTP_USERNAME') ?: '',
+		'mailpassword' => getenv('SMTP_PASSWORD') ?: ''
 	);
 
 	// versi
-	$versi = '1';
+	$versi = getenv('APP_VERSION') ?: '2';
 
 	require("lib/function.php");
-
 ?>
