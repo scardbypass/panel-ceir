@@ -9,7 +9,7 @@ declare(strict_types=1);
  * POST /api/index.php
  */
 require_once __DIR__ . '/../../config.php';
-require_once __DIR__ . '/../../lib/providers/BalanceService.php';
+require_once __DIR__ . '/../../lib/BalanceService.php';
 require_once __DIR__ . '/../../lib/providers/DhruServer.php';
 
 $format = strtoupper(trim((string)($_POST['requestformat'] ?? 'JSON')));
@@ -22,13 +22,12 @@ try {
     echo $server->handle($_POST);
 } catch (Throwable $e) {
     http_response_code(400);
-    $error = ['ERROR' => [['MESSAGE' => $e->getMessage()]]];
     if ($format === 'XML') {
         $xml = new SimpleXMLElement('<RESPONSE/>');
         $node = $xml->addChild('ERROR');
         $node->addChild('MESSAGE', htmlspecialchars($e->getMessage(), ENT_XML1));
         echo $xml->asXML();
     } else {
-        echo json_encode($error, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        echo json_encode(['ERROR' => [['MESSAGE' => $e->getMessage()]]], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 }
