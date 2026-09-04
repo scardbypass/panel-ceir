@@ -1,9 +1,11 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Secure CeirGO API client.
  * Docs: https://ceirgo.id/docs
  */
-class CeirGoClient
+final class CeirGoClient
 {
     private string $baseUrl;
     private string $apiKey;
@@ -12,7 +14,10 @@ class CeirGoClient
     public function __construct(string $apiKey, string $baseUrl = 'https://ceirgo.id', int $timeout = 30)
     {
         $this->apiKey = trim($apiKey);
-        $this->baseUrl = rtrim($baseUrl, '/');
+        $baseUrl = rtrim(trim($baseUrl), '/');
+        // Legacy provider settings often store https://ceirgo.id/api/.
+        // The current API client owns the /api prefix, so remove it here.
+        $this->baseUrl = preg_replace('~/api$~i', '', $baseUrl) ?: 'https://ceirgo.id';
         $this->timeout = max(5, $timeout);
         if ($this->apiKey === '') {
             throw new InvalidArgumentException('CeirGO API key belum dikonfigurasi.');
@@ -82,7 +87,7 @@ class CeirGoClient
         if ($body !== null) {
             $headers[] = 'Content-Type: application/json';
             $options[CURLOPT_HTTPHEADER] = $headers;
-            $options[CURLOPT_POSTFIELDS] = json_encode($body, JSON_UNESCAPED_SLASHES);
+            $options[CURLOPT_POSTFIELDS] = json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         }
         curl_setopt_array($ch, $options);
         $raw = curl_exec($ch);
