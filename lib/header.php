@@ -5,7 +5,7 @@ require 'csrf_token.php';
 
 $orderMenu = [];
 if (isset($_SESSION['user'])) {
-    $qMenu = $conn->query("SELECT m.service_id,m.label,m.icon,m.group_name,m.sort_order FROM order_menu m JOIN layanan_digital l ON l.provider_id=m.service_id WHERE m.is_visible=1 AND l.status='Normal' AND COALESCE(l.public_visible,1)=1 ORDER BY m.group_name ASC,m.sort_order ASC,m.id ASC");
+    $qMenu = $conn->query("SELECT m.service_id,m.label,m.icon,m.group_name,m.sort_order FROM order_menu m JOIN layanan_digital l ON l.provider_id=m.service_id WHERE m.is_visible=1 AND l.status='Normal' ORDER BY m.group_name ASC,m.sort_order ASC,m.id ASC");
     if ($qMenu) while ($menuRow = $qMenu->fetch_assoc()) $orderMenu[] = $menuRow;
 }
 $menuGroups = [];
@@ -45,7 +45,8 @@ foreach ($orderMenu as $item) $menuGroups[$item['group_name']][] = $item;
 <li><a href="/"><i class="mdi mdi-view-dashboard-outline"></i><span>Beranda</span></a></li>
 <?php if(($data_user['level'] ?? '') !== 'Member'): ?><li><a href="/staff/tambah-pengguna"><i class="ri-team-fill"></i><span>Manajemen Member</span></a></li><li><a href="/staff/transfer-saldo"><i class="ri-exchange-dollar-line"></i><span>Transfer Saldo</span></a></li><?php endif; ?>
 <li class="menu-title">Order</li>
-<?php if($orderMenu): foreach($menuGroups as $group=>$items): ?><li class="v3-menu-section"><?php echo htmlspecialchars($group); ?></li><?php foreach($items as $item): ?><li><a class="v3-order-item" href="/pemesanan/order?service=<?php echo rawurlencode($item['service_id']); ?>"><span class="v3-order-icon"><i class="<?php echo htmlspecialchars($item['icon'] ?: 'mdi mdi-cart-outline'); ?>"></i></span><span><?php echo htmlspecialchars($item['label']); ?></span></a></li><?php endforeach; endforeach; else: ?><li><a href="/halaman/produk-dan-layanan"><i class="mdi mdi-cart-outline"></i><span>Produk & Layanan</span></a></li><?php endif; ?>
+<li><a href="/pemesanan"><i class="mdi mdi-storefront-outline"></i><span>Semua Layanan</span></a></li>
+<?php if($orderMenu): foreach($menuGroups as $group=>$items): ?><li class="v3-menu-section"><?php echo htmlspecialchars($group); ?></li><?php foreach($items as $item): ?><li><a class="v3-order-item" href="/pemesanan/order?service=<?php echo rawurlencode($item['service_id']); ?>"><span class="v3-order-icon"><i class="<?php echo htmlspecialchars($item['icon'] ?: 'mdi mdi-cart-outline'); ?>"></i></span><span><?php echo htmlspecialchars($item['label']); ?></span></a></li><?php endforeach; endforeach; endif; ?>
 <li><a href="/riwayat/pemesanan-digital"><i class="mdi mdi-history"></i><span>Riwayat Order</span></a></li><li><a href="/user/mutasi"><i class="mdi mdi-file-document-outline"></i><span>Riwayat Saldo</span></a></li>
 <li class="menu-title">Bantuan</li><li><a href="/tiket"><i class="ri-customer-service-2-fill"></i><span>Tiket</span></a></li><li><a href="/halaman/api-dokumentasi-digital"><i class="mdi mdi-api"></i><span>Dokumentasi API</span></a></li>
 <?php if(($data_user['level'] ?? '') === 'Developers'): ?><li class="menu-title">Developer</li><li><a href="/admin-dashboard"><i class="ri-terminal-box-fill"></i><span>Admin Dashboard</span></a></li><?php endif; ?>
