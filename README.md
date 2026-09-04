@@ -24,29 +24,91 @@ Local Catalog
       ↓
 Admin: harga + status + tampil di depan
       ↓
-Member Order
+Member / Reseller Order
       ↓
 Atomic wallet debit
       ↓
 Provider Order
       ↓
-Webhook / status sync
+Webhook / status polling
       ↓
 Success / Failed / Refund
 ```
 
+## CEIRGo
+
+`lib/providers/CeirGoClient.php` menggunakan API CEIRGo terbaru dengan Bearer token:
+
+```text
+GET  /api/me
+GET  /api/wallet/snap
+GET  /api/services
+GET  /api/services/{idOrCode}
+POST /api/order
+GET  /api/order/{id}
+```
+
+Client otomatis menormalkan konfigurasi provider lama seperti `https://ceirgo.id/api/` agar tidak menjadi `/api/api/...`.
+
 ## DHRU upstream
 
-`lib/providers/DhruClient.php` menangani account info, service list, place order, dan order status. Standar DHRU memang menyediakan fungsi tersebut dan juga mendukung server sendiri sebagai API listener.
+`lib/providers/DhruClient.php` menangani account info, service list, place order, dan order status ke provider DHRU upstream.
 
-## Sinkronisasi DHRU
+Sinkronisasi:
 
 ```text
 admin-dashboard/dhru-products.php
 get/sync-dhru.php
 ```
 
-Produk baru hasil sync memiliki `public_visible=0`, sehingga tidak otomatis muncul di halaman depan. Admin memilih produk yang dijual melalui checkbox **Tampilkan**.
+Produk baru hasil sync memiliki `public_visible=0`, sehingga tidak otomatis muncul di depan. Admin memilih produk yang dijual melalui toggle **Tampilkan**.
+
+## Public DHRU Fusion API
+
+Endpoint kompatibilitas tersedia di:
+
+```text
+POST /api/dhru
+POST /api/dhru/index.php
+POST /api/index.php
+```
+
+Handler:
+
+```text
+lib/providers/DhruServer.php
+```
+
+Action utama:
+
+```text
+accountinfo
+imeiservicelist
+placeimeiorder
+getimeiorder
+```
+
+Compatibility tambahan:
+
+```text
+servicelist
+placeorder
+placeimeiorderbulk
+placeorderbulk
+getorder
+orderstatus
+getimeiorderbulk
+getorderbulk
+orderstatusbulk
+```
+
+Dokumentasi lengkap:
+
+```text
+docs/DHRU.md
+```
+
+API DHRU hanya mengirim produk yang `status='Normal'` dan `public_visible=1`. Saldo reseller berasal dari wallet lokal Panel CEIR.
 
 ## Public catalog
 
@@ -56,24 +118,7 @@ GET /api/catalog.php?category=...
 GET /api/catalog.php?search=...
 ```
 
-Harga API/provider tidak dibocorkan ke public catalog.
-
-## Public DHRU API
-
-```text
-POST https://DOMAIN-ANDA/api/dhru/index.php
-```
-
-Parameter standar:
-
-```text
-username=USERNAME
-apiaccesskey=API_KEY
-requestformat=JSON
-action=accountinfo|imeiservicelist|placeimeiorder|getimeiorder
-```
-
-Endpoint ini ditujukan untuk menjual produk panel ke reseller yang menggunakan standar DHRU Fusion.
+Harga provider/upstream tidak dibocorkan ke public catalog.
 
 ## Database migration
 
@@ -83,7 +128,7 @@ Jalankan:
 database/migrations/2026_09_04_v2.sql
 ```
 
-Migration bersifat additive agar database dan route lama tidak langsung rusak.
+Migration menambahkan katalog visibility, wallet ledger, API clients, payment transactions, dan provider order tracking.
 
 ## SayaBayar
 
@@ -103,6 +148,10 @@ SAYABAYAR_WEBHOOK_SECRET
 ```
 
 Jangan menyimpan credential asli di Git.
+
+## reCAPTCHA
+
+reCAPTCHA sudah dinonaktifkan. Tidak ada widget, validasi captcha, atau request ke endpoint Google reCAPTCHA pada alur login/register/reset password.
 
 ## Deployment
 
