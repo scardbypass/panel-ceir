@@ -12,9 +12,9 @@ if ($maintenance === 1) {
 // Database - configure through VPS environment variables (.env is not committed)
 $config['db'] = array(
     'host' => getenv('DB_HOST') ?: 'localhost',
-    'name' => getenv('DB_NAME') ?: '',
-    'username' => getenv('DB_USERNAME') ?: '',
-    'password' => getenv('DB_PASSWORD') ?: ''
+    'name' => getenv('DB_NAME') ?: 'scar1544_ppob',
+    'username' => getenv('DB_USERNAME') ?: 'scar1544_ppob',
+    'password' => getenv('DB_PASSWORD') ?: 'scar1544_ppob'
 );
 
 $conn = mysqli_connect(
@@ -30,8 +30,8 @@ if (!$conn) {
 
 // Konfigurasi URL domain
 $config['web'] = array(
-    'url' => rtrim(getenv('APP_URL') ?: 'http://localhost/', '/') . '/',
-    'url_canonical' => rtrim(getenv('APP_CANONICAL_URL') ?: 'http://localhost', '/')
+    'url' => rtrim(getenv('APP_URL') ?: 'http://scard-project.id/', '/') . '/',
+    'url_canonical' => rtrim(getenv('APP_CANONICAL_URL') ?: 'http://scard-project.id', '/')
 );
 
 // Date & time
