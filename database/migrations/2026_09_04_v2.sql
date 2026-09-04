@@ -1,4 +1,5 @@
--- Panel CEIR V2: additive migration. Existing tables/routes remain compatible.
+-- Panel CEIR V2 migration.
+-- Wallet ledger is the source of truth for idempotent money mutations.
 START TRANSACTION;
 
 ALTER TABLE layanan_digital
@@ -6,6 +7,24 @@ ALTER TABLE layanan_digital
   ADD COLUMN IF NOT EXISTS sort_order INT NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS image_url VARCHAR(500) NULL,
   ADD COLUMN IF NOT EXISTS updated_at DATETIME NULL;
+
+CREATE TABLE IF NOT EXISTS wallet_ledger (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  username VARCHAR(100) NOT NULL,
+  direction ENUM('credit','debit') NOT NULL,
+  amount BIGINT UNSIGNED NOT NULL,
+  balance_before BIGINT UNSIGNED NOT NULL,
+  balance_after BIGINT UNSIGNED NOT NULL,
+  reference_key VARCHAR(150) NOT NULL,
+  action VARCHAR(60) NOT NULL,
+  message VARCHAR(255) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_wallet_reference (reference_key),
+  KEY idx_wallet_user_created (user_id,created_at),
+  KEY idx_wallet_username_created (username,created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS api_clients (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -17,8 +36,7 @@ CREATE TABLE IF NOT EXISTS api_clients (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_api_key_hash (api_key_hash),
-  KEY idx_api_user (user_id),
-  CONSTRAINT fk_api_clients_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  KEY idx_api_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS payment_transactions (
@@ -34,9 +52,7 @@ CREATE TABLE IF NOT EXISTS payment_transactions (
   paid_at DATETIME NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_payment_invoice (invoice_id),
-  KEY idx_payment_user_status (username,status)
+  PRIMARY KEY (id), UNIQUE KEY uq_payment_invoice (invoice_id), KEY idx_payment_user_status (username,status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS provider_orders_v2 (
@@ -53,10 +69,7 @@ CREATE TABLE IF NOT EXISTS provider_orders_v2 (
   response_message TEXT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_local_order (local_order_id),
-  KEY idx_provider_order (provider,provider_order_id),
-  KEY idx_provider_user (user_id)
+  PRIMARY KEY (id), UNIQUE KEY uq_local_order (local_order_id), KEY idx_provider_order (provider,provider_order_id), KEY idx_provider_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 COMMIT;
