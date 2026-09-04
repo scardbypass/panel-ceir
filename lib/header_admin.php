@@ -1,11 +1,11 @@
 <?php
-require 'session_login_admin.php';
-require 'database.php';
+require_once __DIR__ . '/session_login_admin.php';
+require_once __DIR__ . '/database.php';
 ?>
 <!DOCTYPE html>
 <html lang="id-ID">
 <head>
-<?php include_once 'SEOSecretIDN-meta-all.php'; ?>
+<?php include_once __DIR__ . '/SEOSecretIDN-meta-all.php'; ?>
 <link href="/assets/css/scroll.css?v<?php echo $versi; ?>" rel="stylesheet">
 <link href="/assets/default/bootstrap-kmp.css?v<?php echo $versi; ?>" rel="stylesheet">
 <link href="/assets/default/app-kmp.css?v<?php echo $versi; ?>" rel="stylesheet">
