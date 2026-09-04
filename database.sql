@@ -1,2 +1,2 @@
--- Canonical database dump is preserved in Git history.
--- Apply V2 changes with database/migrations/2026_09_04_v2.sql.
+-- Compatibility marker. Canonical dump: commit c00ae10dd0ba8d6a33223e061a3df6eb22199b3c
+-- V2 migration: database/migrations/2026_09_04_v2.sql
