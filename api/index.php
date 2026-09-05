@@ -1,5 +1,5 @@
 <?php
+declare(strict_types=1);
 
-
-header("location: /");
-?>
+// DHRU Fusion compatibility endpoint.
+require __DIR__ . '/dhru/index.php';

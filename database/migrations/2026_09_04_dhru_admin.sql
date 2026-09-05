@@ -1,0 +1,15 @@
+-- DHRU administration and catalog controls.
+START TRANSACTION;
+
+ALTER TABLE provider
+  ADD COLUMN IF NOT EXISTS status ENUM('active','disabled') NOT NULL DEFAULT 'active',
+  ADD COLUMN IF NOT EXISTS settings_json LONGTEXT NULL,
+  ADD COLUMN IF NOT EXISTS updated_at DATETIME NULL;
+
+ALTER TABLE layanan_digital
+  ADD COLUMN IF NOT EXISTS dhru_group VARCHAR(150) NULL,
+  ADD COLUMN IF NOT EXISTS service_type VARCHAR(50) NOT NULL DEFAULT 'IMEI',
+  ADD COLUMN IF NOT EXISTS requires_json LONGTEXT NULL,
+  ADD COLUMN IF NOT EXISTS cost_updated_at DATETIME NULL;
+
+COMMIT;

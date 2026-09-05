@@ -1,7 +1,7 @@
 <?php
 $fullurl = ($_SERVER['PHP_SELF']);
 $trimmed = trim($fullurl, ".php");
-$canonical = rtrim($trimmed, '/' . '/?');
+$canonical = trim($trimmed, '/' . '/?');
 ?>
 
 <!--Viewport -->
@@ -93,10 +93,8 @@ $canonical = rtrim($trimmed, '/' . '/?');
 <link href="//fonts.googleapis.com" rel="preconnect dns-prefetch"/>
 <link href="//www.googletagmanager.com" rel="preconnect dns-prefetch"/>
 <link href="//www.google-analytics.com" rel="preconnect dns-prefetch"/>
-<link href="//www.recaptcha.net" rel="preconnect dns-prefetch"/>
 <link href="//ajax.cloudflare.com" rel="preconnect dns-prefetch"/>
 <link href="//www.gstatic.com" rel="preconnect dns-prefetch"/>
 <link href="//www.w3.org" rel="preconnect dns-prefetch"/>
-<link href="//www.gstatic.com" rel="preconnect dns-prefetch"/>
 <link href="//images.dmca.com" rel="preconnect dns-prefetch"/>
 <link href="//apps.elfsight.com" rel="preconnect dns-prefetch"/>

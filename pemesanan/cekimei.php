@@ -2,253 +2,72 @@
 session_start();
 require '../config.php';
 require '../lib/session_user.php';
+require '../lib/providers/CeirGoClient.php';
+require '../lib/OrderService.php';
+require '../lib/BalanceService.php';
+
 if (isset($_POST['pesan'])) {
-	require '../lib/session_login.php';
-	$post_operator = $conn->real_escape_string(trim(filter($_POST['operator'])));
-	$post_layanan = $conn->real_escape_string(trim(filter($_POST['layanan'])));
-	$post_target = $conn->real_escape_string(trim(filter($_POST['target'])));
-	$post_nometer = $conn->real_escape_string(trim(filter($_POST['no_meter'])));
+    require '../lib/session_login.php';
+    $operator = trim((string)($_POST['operator'] ?? ''));
+    $layanan = trim((string)($_POST['layanan'] ?? ''));
+    $target = preg_replace('/\D+/', '', (string)($_POST['target'] ?? ''));
+    $noMeter = trim((string)($_POST['no_meter'] ?? ''));
+    $oid = null;
 
-	$cek_layanan = $conn->query("SELECT * FROM layanan_digital WHERE provider_id = '$post_layanan' AND status = 'Normal'");
-	$data_layanan = mysqli_fetch_assoc($cek_layanan);				
+    try {
+        if ($operator === '' || $operator === '0' || $layanan === '' || $layanan === '0' || $target === '') throw new InvalidArgumentException('Lengkapi kategori, produk, dan nomor IMEI.');
+        if (!preg_match('/^\d{14,16}$/', $target)) throw new InvalidArgumentException('Nomor IMEI harus 14–16 digit.');
 
-	$order_id = acak_nomor(3).acak_nomor(4);
-	$provider = $data_layanan['provider'];
+        $orders = new OrderService($conn);
+        $order = $orders->createPendingDigital($sess_username, $layanan, $operator, $target, $noMeter, 'Website');
+        $oid = $order['oid']; $service = $order['service'];
 
-	$cek_provider = $conn->query("SELECT * FROM provider WHERE code = '$provider'");
-	$data_provider = mysqli_fetch_assoc($cek_provider);
-	$action = 'pemesanan';
+        if (strtolower((string)$service['provider']) === 'ceirgo') {
+            $providerStmt = $conn->prepare("SELECT api_key,link FROM provider WHERE code='ceirgo' LIMIT 1");
+            $providerStmt->execute(); $provider = $providerStmt->get_result()->fetch_assoc(); $providerStmt->close();
+            if (!$provider || trim((string)$provider['api_key']) === '') throw new RuntimeException('Provider CEIRGo belum dikonfigurasi.');
+            $base = trim((string)($provider['link'] ?? '')) ?: 'https://ceirgo.id';
+            $client = new CeirGoClient((string)$provider['api_key'], $base);
+            $result = $client->createOrder((string)$service['provider_id'], ['imeis' => [$target]]);
+            $providerOid = (string)($result['order_id'] ?? $result['data']['order_id'] ?? $result['data']['id'] ?? '');
+            if ($providerOid === '') throw new RuntimeException('Provider tidak mengembalikan Order ID.');
+            $orders->markProviderAccepted($oid, $providerOid, 'Order diterima provider.');
+        } elseif (strtoupper((string)$service['provider']) === 'MANUAL') {
+            $orders->markProviderAccepted($oid, $oid, 'Menunggu proses manual.');
+        } else {
+            throw new RuntimeException('Provider produk belum didukung: ' . $service['provider']);
+        }
 
-	$cek_pesanan = $conn->query("SELECT * FROM pembelian_digital WHERE user = '$sess_username' AND target = '$post_target' AND status = 'Pending' AND provider = '$provider'");
-	$data_pesanan = mysqli_fetch_assoc($cek_pesanan);
+        $_SESSION['hasil'] = ['alert'=>'success','judul'=>'Order Berhasil','pesan'=>'<b>Order ID:</b> '.htmlspecialchars($oid).'<br><b>Layanan:</b> '.htmlspecialchars($service['layanan']).'<br><b>Target:</b> '.htmlspecialchars($target).'<br><b>Harga:</b> Rp '.number_format((int)$order['price'],0,',','.').'<br><b>Status:</b> Processing'];
+    } catch (Throwable $e) {
+        if ($oid !== null) { try { (new OrderService($conn))->markFailed($oid, $e->getMessage()); } catch (Throwable $ignored) {} }
+        $_SESSION['hasil'] = ['alert'=>'danger','judul'=>'Order Gagal','pesan'=>htmlspecialchars($e->getMessage())];
+    }
+}
 
-	if (!$post_target || !$post_layanan || !$post_operator) {
-		$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Order Gagal', 'pesan' => 'Lengkapi Bidang Berikut:<br/> - Kategori <br /> - Produk <br /> - Target');
-
-	} else if (mysqli_num_rows($cek_layanan) == 0) {
-		$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Order Gagal', 'pesan' => 'Produk Tidak Tersedia');
-
-	} else if (mysqli_num_rows($cek_provider) == 0) {
-		$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Order Gagal', 'pesan' => 'Server Sedang Maintenance');
-
-	} else if ($data_user['saldo'] < $data_layanan['harga']) {
-		$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Order Gagal', 'pesan' => 'Saldo Tidak Mencukupi');
-
-	//} else if (mysqli_num_rows($cek_pesanan) == 1) {
-		//$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Order Gagal', 'pesan' => 'Orderan Sebelumnya di Produk & Target yang Sama Masih Pending');
-
-	} else {
-
-		if ($provider == "MANUAL") {
-		        	$postdata = "";
-		    	} else if ($provider == "ceirgo") {
-		if ($post_nometer == false) {
-			$postdata = "api_key=".$data_provider['api_key']."&action=$action&layanan=".$data_layanan['provider_id']."&target=$post_target";
-			} else if ($post_nometer == true) {
-			$postdata = "api_key=".$data_provider['api_key']."&action=$action&layanan=".$data_layanan['provider_id']."&target=$post_target";
-			}
-
-           $url = 'https://ceirgo.id/api/produk-digital'; 
-                
-            $curl = curl_init();
-            curl_setopt($curl, CURLOPT_URL, $url);
-            curl_setopt($curl, CURLOPT_HEADER, 0);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-            curl_setopt($curl, CURLOPT_TIMEOUT, 0);
-            curl_setopt($curl, CURLOPT_POST, 1);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $postdata);
-	    	$response = curl_exec($curl);
-            curl_close($curl);
-			/*
-			echo $response;
-			*/
-            $json_result = json_decode($response, true);
-
-		} else {
-			die("System Error!");
-		}
-		if ($provider == "ceirgo" AND $json_result['status'] == false) {
-			$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Order Gagal', 'pesan' => ''.$json_result['data']['pesan']);
-		} else {
-			if ($provider == "ceirgo") {
-				$provider_oid = $json_result['data']['id'];
-			}
-			
-				if ($conn->query("INSERT INTO pembelian_digital VALUES ('','$order_id', '$provider_oid', '$sess_username', '".$data_layanan['layanan']."', '".$data_layanan['harga']."', '".$data_layanan['profit']."', '$post_target', '$post_nometer', '$pesan', 'Pending', '$date', '$time', 'Website', '$provider', '0')") == true) {
-
-					$conn->query("UPDATE users SET saldo = saldo - ".$data_layanan['harga'].", pemakaian_saldo = pemakaian_saldo + ".$data_layanan['harga']." WHERE username = '$sess_username'");
-					$conn->query("INSERT INTO history_saldo VALUES ('', '$sess_username', 'Pengurangan Saldo', '".$data_layanan['harga']."', 'Order ID $order_id Produk Digital', '$date', '$time')");
-
-					$harga = number_format($data_layanan['harga'],0,',','.');
-					$_SESSION['hasil'] = array(
-						'alert' => 'success',
-						'judul' => 'Order Berhasil', 
-						'pesan' => '<br/> 
-						<b>Order ID : </b> '.$order_id.'<br />
-						<b>Layanan : </b> '.$data_layanan['layanan'].'<br />
-						<b>Target : </b> '.$post_target.'<br />
-						<b>Harga : </b> Rp '.$harga.'');
-				} else {
-					$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Order Gagal', 'pesan' => 'Server Sedang Maintenance. Coba Lagi 15 Menit Kedepan.');
-				}
-			}
-		}
-	}
-
-
-require("../lib/header.php");
+require '../lib/header.php';
 ?>
-
-<!--Title-->
-<title>Cek imei Apple</title>
-<meta name="description" content="Platform Layanan Digital All in One, Berkualitas, Cepat & Aman. Menyediakan Produk & Layanan Pemasaran Sosial Media, Payment Point Online Bank, Layanan Pembayaran Elektronik, Optimalisasi Toko Online, Voucher Game dan Produk Digital."/>
-
-<div class="row">
-	<div class="col-md-7">
-		<div class="card">
-			<div class="card-body">
-				<h4 class="text-uppercase text-center header-title"><i class="mdi mdi-cellphone-iphone mr1 text-primary"></i><b> Cek ceir</b></h4><hr>
-				<form class="form-horizontal" method="POST">
-					<input type="hidden" name="csrf_token" value="<?php echo $config['csrf_token'] ?>">   										    
-					<div class="form-group">
-						<label class="col-md-12 control-label">Kategori *</label>
-						<div class="col-md-12">
-							<select class="form-control" name="operator" id="operator">
-								<option value="0">Pilih Salah Satu</option>
-								<?php
-								$cek_kategori = $conn->query("SELECT * FROM kategori_layanan WHERE nama IN ('Cekimei') ORDER BY nama ASC");
-								while ($data_kategori = $cek_kategori->fetch_assoc()) {
-									?>
-									<option value="<?php echo $data_kategori['kode']; ?>"><?php echo $data_kategori['nama']; ?></option>
-								<?php } ?>														
-							</select>
-						</div>
-					</div>
-					
-					<div class="form-group">
-						<label class="col-md-12 control-label">Produk *</label>
-						<div class="col-md-12">
-							<select class="form-control" name="layanan" id="layanan">
-								<option value="0">Pilih Kategori</option>
-							</select>
-						</div>
-					</div>
-
-					<div id="catatan">
-					</div>
-					
-					<div class="form-row">
-						<div class="form-group col-md-6">
-							<label class="col-md-12 col-form-label">Nomor Imei *</label>
-							<div class="col-md-12">
-								<input type="text" name="target" class="form-control" placeholder="Input Nomor Imei HP">
-							</div>
-						</div>
-
-						<div class="form-group col-md-6">
-							<label class="col-md-12 col-form-label">Total</label>
-							<div class="col-md-12">
-								<div class="input-group">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Rp </span>
-									</div>
-									<input type="number" class="form-control" id="harga" readonly>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="form-group">
-						<div class="col-md-12">
-							<button type="submit" class="btn btn-block btn-primary waves-effect w-md waves-light" name="pesan" id="checkout" disabled="disabled"><i class="mdi mdi-cart"></i>Order</button>
-						</div>
-					</div>
-				</form>
-
-				<div style="text-align: center;">
-					<br/>Dengan melakukan order, Anda telah memahami dan menyetujui <a href="#informasiorder"><b>Syarat & Ketentuan</b></a>, serta mengikuti <a href="#informasiorder"><b>Cara Melakukan Order</b></a> sesuai panduan.
-				</div>
-				
-			</div>
-		</div>
-	</div>			
-	<!-- end col -->
-
-	<!-- INFORMASI ORDER -->
-	<div class="col-md-5" id="informasiorder">
-		<div class="card">
-			<div class="card-body">
-
-				<center><h4 class="m-t-0 text-uppercase header-title"><i aria-hidden="true" class="fa fa-info-circle"></i><b> Informasi Order</h4></b>
-					Gunakan koneksi internet yang stabil agar daftar produk sinkron dengan kategori yang dipilih.<hr>
-				</center>
-
-	
+<title>Cek CEIR</title>
+<meta name="description" content="Cek status IMEI dengan cepat dan aman.">
+<style>
+.ceir-shell{max-width:1080px;margin:24px auto}.ceir-hero{border-radius:24px;padding:28px;background:linear-gradient(135deg,rgba(37,99,235,.14),rgba(124,58,237,.12));border:1px solid rgba(127,127,127,.18);margin-bottom:18px}.ceir-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:18px}.ceir-card{border-radius:22px;border:1px solid rgba(127,127,127,.16);box-shadow:0 12px 40px rgba(0,0,0,.06);overflow:hidden}.ceir-card .card-body{padding:24px}.ceir-title{font-weight:800;margin:0}.ceir-sub{opacity:.7;margin:6px 0 0}.ceir-field{margin-bottom:18px}.ceir-field label{font-weight:700;margin-bottom:8px}.ceir-field .form-control{height:48px;border-radius:14px}.ceir-total{display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:16px;background:rgba(127,127,127,.07);margin-bottom:18px}.ceir-total strong{font-size:20px}.ceir-btn{height:50px;border-radius:15px;font-weight:800}.ceir-tip{padding:16px;border-radius:16px;background:rgba(37,99,235,.07);margin-bottom:14px}.ceir-list{padding-left:20px;margin-bottom:0}.ceir-list li{margin:9px 0}.ceir-loading{opacity:.6;pointer-events:none}@media(max-width:767px){.ceir-shell{margin:12px auto}.ceir-grid{grid-template-columns:1fr}.ceir-hero{padding:20px;border-radius:20px}.ceir-card .card-body{padding:18px}}
+</style>
+<div class="ceir-shell">
+  <div class="ceir-hero"><div class="ceir-title h3">Cek CEIR</div><div class="ceir-sub">Pilih layanan, masukkan IMEI, lalu kirim order. Saldo dipotong otomatis setelah order tervalidasi.</div></div>
+  <div class="ceir-grid">
+    <div class="ceir-card card"><div class="card-body"><form method="POST" id="ceirForm">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($config['csrf_token'] ?? '') ?>">
+      <div class="ceir-field"><label>Kategori</label><select class="form-control" name="operator" id="operator"><option value="0">Pilih kategori</option><?php $q=$conn->query("SELECT * FROM kategori_layanan WHERE nama IN ('Cekimei') ORDER BY nama ASC"); while($r=$q->fetch_assoc()): ?><option value="<?= htmlspecialchars($r['kode']) ?>"><?= htmlspecialchars($r['nama']) ?></option><?php endwhile; ?></select></div>
+      <div class="ceir-field"><label>Produk</label><select class="form-control" name="layanan" id="layanan"><option value="0">Pilih kategori terlebih dahulu</option></select></div>
+      <div id="catatan"></div>
+      <div class="ceir-field"><label>Nomor IMEI</label><input class="form-control" type="text" inputmode="numeric" maxlength="16" name="target" id="target" placeholder="Masukkan 15 digit IMEI" autocomplete="off"></div>
+      <div class="ceir-total"><span>Total pembayaran</span><strong>Rp <span id="hargaText">0</span></strong></div>
+      <button class="btn btn-primary btn-block ceir-btn" type="submit" name="pesan" id="checkout" disabled><i class="mdi mdi-cart-outline"></i> Konfirmasi Order</button>
+    </form></div></div>
+    <div class="ceir-card card"><div class="card-body"><h5 class="ceir-title">Informasi Order</h5><p class="ceir-sub">Periksa kembali data sebelum mengirim.</p><hr><div class="ceir-tip"><b>Saldo aman</b><br><small>Debit saldo dilakukan atomic untuk mencegah saldo minus atau terpotong dua kali.</small></div><ul class="ceir-list"><li>Pastikan IMEI benar.</li><li>Jangan tekan tombol order berkali-kali.</li><li>Target yang masih diproses tidak dapat diorder ulang.</li><li>Provider gagal dapat memicu refund otomatis.</li></ul></div></div>
+  </div>
 </div>
-
-<script type="text/javascript">
-	$(document).ready(function() {
-		$("#operator").change(function() {
-			var operator = $("#operator").val();
-			$.ajax({
-				url: '<?php echo $config['web']['url'];?>ajax/layanan_produkdigital.php',
-				data: 'operator=' + operator,
-				type: 'POST',
-				dataType: 'html',
-				success: function(msg) {
-					$("#layanan").html(msg);
-				}
-			});
-		});
-		$("#layanan").change(function() {
-			var layanan = $("#layanan").val();
-			$.ajax({
-				url: '<?php echo $config['web']['url'];?>ajax/harga_digital.php',
-				data: 'layanan=' + layanan,
-				type: 'POST',
-				dataType: 'html',
-				success: function(msg) {
-					$("#harga").val(msg);
-				}
-			});
-		});
-		$("#layanan").change(function() {
-			var layanan = $("#layanan").val();
-			$.ajax({
-				url: '<?php echo $config['web']['url'];?>ajax/catatan-digital.php',
-				data: 'layanan=' + layanan,
-				type: 'POST',
-				dataType: 'html',
-				success: function(msg) {
-					$("#catatan").html(msg);
-				}
-			});
-		});
-	});
+<script>
+$(function(){const $form=$('#ceirForm'),$btn=$('#checkout'),$target=$('#target');function check(){$btn.prop('disabled',$('#operator').val()==='0'||$('#layanan').val()==='0'||!/^\d{14,16}$/.test($target.val().replace(/\D/g,'')));}$('#operator').on('change',function(){$('#layanan').html('<option>Memuat produk...</option>');$.post('<?= htmlspecialchars($config['web']['url']) ?>ajax/layanan_produkdigital.php',{operator:this.value},function(x){$('#layanan').html(x);check();});});$('#layanan').on('change',function(){const id=this.value;$.post('<?= htmlspecialchars($config['web']['url']) ?>ajax/harga_digital.php',{layanan:id},function(x){$('#hargaText').text(Number(x||0).toLocaleString('id-ID'));});$.post('<?= htmlspecialchars($config['web']['url']) ?>ajax/catatan-digital.php',{layanan:id},function(x){$('#catatan').html(x);});check();});$target.on('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,16);check();});$form.on('submit',function(){if($btn.prop('disabled'))return false;$btn.prop('disabled',true).addClass('ceir-loading').html('<i class="mdi mdi-loading mdi-spin"></i> Memproses...');});});
 </script>
-
-<script type="text/javascript">
-	//Disable button
-	(function() {
-		$('input').keyup(function() {
-			var empty = false;
-			$('input').each(function() {
-				if ($(this).val() == '') {
-					empty = true;
-				}
-			});
-			//Id button
-			if (empty) {
-				$('#checkout').attr('disabled', 'disabled');
-			} else {
-				$('#checkout').removeAttr('disabled');
-			}
-		});
-	})()
-</script>
-
-<?php
-require ("../lib/footer.php");
-?>
+<?php require '../lib/footer.php'; ?>

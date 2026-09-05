@@ -1,88 +1,25 @@
-<?php 
+<?php
 session_start();
 require '../config.php';
 require '../lib/session_login.php';
 require '../lib/session_user.php';
-if ($data_user['level'] == 'Member') {
-	$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Gagal!', 'pesan' => 'Dilarang Mengakses!.');
-	exit(header("Location: ".$config['web']['url']));
-}
-
+require '../lib/BalanceService.php';
+if ($data_user['level'] === 'Member') { $_SESSION['hasil']=['alert'=>'danger','judul'=>'Gagal!','pesan'=>'Dilarang Mengakses!.']; exit(header('Location: '.$config['web']['url'])); }
 if (isset($_POST['transfer'])) {
-	$tujuan = $conn->real_escape_string(filter($_POST['tujuan']));
-	$jumlah = $conn->real_escape_string(filter($_POST['jumlah']));
-
-	$cek_tujuan = $conn->query("SELECT * FROM users WHERE username = '$tujuan'");
-	$cek_tujuan_rows = mysqli_num_rows($cek_tujuan);
-
-	if (!$tujuan || !$jumlah) {
-		$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Permintaan Gagal', 'pesan' => 'Lengkapi Bidang Berikut:<br/> - Username Tujuan <br /> - Jumlah Transfer');
-	} else if ($cek_tujuan_rows == 0 ) {
-		$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Permintaan Gagal', 'pesan' => 'Username Tujuan Tidak Ditemukan');
-
-	} else if (strtolower($sess_username) == $tujuan ) {
-		$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Permintaan Gagal', 'pesan' => 'Tidak Bisa Transfer ke Username Tujuan');
-
-	//validasi huruf kecil saja
-	} else if (!preg_match("/^[a-z 0-9]*$/",$tujuan)) {
-		$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Permintaan Gagal', 'pesan' => 'Format Tujuan Salah, Masukkan Huruf Kecil!');
-
-	} else if ($jumlah < 5000 ) {
-		$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Permintaan Gagal', 'pesan' => 'Minimal Transfer Saldo Sebesar Rp 5.000');
-	} else if ($data_user['saldo'] < $jumlah ) {
-		$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Permintaan Gagal', 'pesan' => 'Saldo Tidak Mencukupi');	
-	} else {
-		if ($conn->query("UPDATE users set saldo = saldo + $jumlah WHERE username = '$tujuan'") == true) {
-			$conn->query("UPDATE users set saldo = saldo - $jumlah, pemakaian_saldo = pemakaian_saldo + $jumlah  WHERE username = '$sess_username'");
-			$conn->query("INSERT INTO history_saldo VALUES ('', '$sess_username', 'Pengurangan Saldo', '$jumlah', 'Transfer Saldo Kepada $tujuan Sejumlah $jumlah ', '$date', '$time')");	
-			$conn->query("INSERT INTO history_saldo VALUES ('', '$tujuan', 'Penambahan Saldo', '$jumlah', 'Mendapatkan Transfer Saldo Dari $sess_username Sejumlah $jumlah', '$date', '$time')");
-			$conn->query("INSERT INTO riwayat_transfer VALUES ('', '$sess_username', '$tujuan', '$jumlah','$date', '$time')");
-			$_SESSION['hasil'] = array(
-				'alert' => 'success', 
-				'judul' => 'Permintaan Berhasil', 
-				'pesan' => '
-				Transfer Saldo Berhasil <br />
-				<b>Tujuan</b> : '.$tujuan.' <br />
-				<b>Jumlah</b> : Rp '.$jumlah.'
-				');
-		} else {
-			$_SESSION['hasil'] = array('alert' => 'danger', 'judul' => 'Permintaan Gagal', 'pesan' => 'Gagal');	
-		}
-	}
+    $tujuan=strtolower(trim((string)($_POST['tujuan']??'')));
+    $jumlah=(int)($_POST['jumlah']??0);
+    try {
+        if($tujuan===''||$jumlah<5000)throw new InvalidArgumentException('Username tujuan dan jumlah minimal Rp 5.000 wajib diisi.');
+        if($tujuan===$sess_username)throw new InvalidArgumentException('Tidak bisa transfer ke username sendiri.');
+        if(!preg_match('/^[a-z0-9]+$/',$tujuan))throw new InvalidArgumentException('Format username tujuan tidak valid.');
+        $ref='transfer:'.$sess_username.':'.$tujuan.':'.hash('sha256',(string)$jumlah.':'.date('YmdHi'));
+        (new BalanceService($conn))->transfer($sess_username,$tujuan,$jumlah,$ref);
+        $_SESSION['hasil']=['alert'=>'success','judul'=>'Transfer Berhasil','pesan'=>'Transfer <b>Rp '.number_format($jumlah,0,',','.').'</b> ke <b>'.htmlspecialchars($tujuan).'</b> berhasil.'];
+    }catch(Throwable $e){$_SESSION['hasil']=['alert'=>'danger','judul'=>'Transfer Gagal','pesan'=>htmlspecialchars($e->getMessage())];}
 }
 require '../lib/header.php';
 ?>
-
-<!--Title-->
 <title>Transfer Saldo</title>
-<meta name="description" content="Platform Layanan Digital All in One, Berkualitas, Cepat & Aman. Menyediakan Produk & Layanan Pemasaran Sosial Media, Payment Point Online Bank, Layanan Pembayaran Elektronik, Optimalisasi Toko Online, Voucher Game dan Produk Digital."/>
-
-<div class="row">
-	<div class="offset-lg-2 col-lg-8">
-		<div class="card">
-			<div class="card-body">
-				<h4 class="text-uppercase text-center header-title"><i class="mdi mdi-account-switch text-primary"></i> Transfer Saldo</h4><hr>
-				<form class="form-horizontal" method="POST">
-					<input type="hidden" name="csrf_token" value="<?php echo $config['csrf_token'] ?>">
-					<div class="form-group">
-						<label class="col-md-12 control-label">Username Tujuan</label>
-						<div class="col-md-12">
-							<input type="text" name="tujuan" class="form-control" placeholder="Username Tujuan">
-						</div>
-					</div>	                              										
-					<div class="form-group">
-						<label class="col-md-12 control-label">Jumlah Transfer</label>
-						<div class="col-md-12">
-							<input type="number" name="jumlah" class="form-control" placeholder="Jumlah Transfer">
-						</div>
-					</div>										
-					<div class="col-md-12">
-						<button type="submit" class="pull-right btn btn-block btn--md btn-primary waves-effect waves-light" name="transfer"><i class="mdi mdi-checkbox-marked-circle"></i> Transfer Saldo</button>
-					</div> 
-				</form>
-			</div>
-		</div>
-	</div> <!-- end col -->
-</div>
-<?php
-require '../lib/footer.php';
+<style>.wallet-shell{max-width:760px;margin:28px auto}.wallet-card{border-radius:24px;border:1px solid rgba(127,127,127,.16);box-shadow:0 14px 45px rgba(0,0,0,.07)}.wallet-head{padding:24px;border-radius:24px 24px 0 0;background:linear-gradient(135deg,rgba(37,99,235,.12),rgba(124,58,237,.10))}.wallet-field{margin-bottom:18px}.wallet-field label{font-weight:700}.wallet-field input{height:50px;border-radius:14px}.wallet-btn{height:50px;border-radius:14px;font-weight:800}@media(max-width:767px){.wallet-shell{margin:12px auto}.wallet-head{padding:20px}}</style>
+<div class="wallet-shell"><div class="wallet-card card"><div class="wallet-head"><h4 class="mb-1"><i class="mdi mdi-wallet-outline"></i> Transfer Saldo</h4><div class="text-muted">Kirim saldo dengan aman. Sistem mencegah saldo minus dan transfer ganda.</div></div><div class="card-body p-4"><form method="POST"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars($config['csrf_token']??'') ?>"><div class="wallet-field"><label>Username Tujuan</label><input type="text" name="tujuan" class="form-control" placeholder="username penerima" autocomplete="off" required></div><div class="wallet-field"><label>Jumlah</label><input type="number" name="jumlah" class="form-control" min="5000" step="1" placeholder="Minimal Rp 5.000" required></div><button class="btn btn-primary btn-block wallet-btn" name="transfer"><i class="mdi mdi-send"></i> Transfer Saldo</button></form></div></div></div>
+<?php require '../lib/footer.php'; ?>
