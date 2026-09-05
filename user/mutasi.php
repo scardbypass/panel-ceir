@@ -1,208 +1,31 @@
 <?php
+declare(strict_types=1);
 session_start();
-require '../config.php';
-require '../lib/session_login.php';
-require '../lib/session_user.php';
-require '../lib/header.php';
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../lib/session_login.php';
+require_once __DIR__ . '/../lib/session_user.php';
+require_once __DIR__ . '/../lib/header.php';
+
+$limit=(int)($_GET['tampil']??10); if(!in_array($limit,[10,20,50,100],true))$limit=10;
+$type=trim((string)($_GET['tipe']??''));
+$page=max(1,(int)($_GET['halaman']??1));
+$where="username='".$conn->real_escape_string((string)$sess_username)."'";
+if($type!=='' && in_array($type,['Penambahan Saldo','Pengurangan Saldo'],true))$where.=" AND aksi='".$conn->real_escape_string($type)."'";
+$countQ=$conn->query("SELECT COUNT(*) total FROM history_saldo WHERE $where");$total=(int)(($countQ&&($x=$countQ->fetch_assoc()))?$x['total']:0);if($countQ)$countQ->free();
+$pages=max(1,(int)ceil($total/$limit));$page=min($page,$pages);$offset=($page-1)*$limit;
+$rows=[];$q=$conn->query("SELECT aksi,date,time,nominal,pesan FROM history_saldo WHERE $where ORDER BY id DESC LIMIT $offset,$limit");if($q){while($r=$q->fetch_assoc())$rows[]=$r;$q->free();}
+function walletUrl(int $page,int $limit,string $type):string{return '/user/mutasi?halaman='.$page.'&tampil='.$limit.'&tipe='.rawurlencode($type);}
 ?>
-
-<!--Title-->
-<title>Mutasi Saldo</title>
-<meta name="description" content="Platform Layanan Digital All in One, Berkualitas, Cepat & Aman. Menyediakan Produk & Layanan Pemasaran Sosial Media, Payment Point Online Bank, Layanan Pembayaran Elektronik, Optimalisasi Toko Online, Voucher Game dan Produk Digital."/>
-
-<div class="row">
-    <div class="col-lg-12">
-        <div class="card">
-            <div class="card-body">
-                <center><h4 class="m-t-0 text-uppercase text-center header-title"><i aria-hidden="true" class="fa fa-history text-primary"></i><b> Mutasi Saldo</h4></b><hr></center>
-                <form method="GET">
-                    <input type="hidden" name="csrf_token" value="<?php echo $config['csrf_token'] ?>">
-                    <div class="row">
-                        <div class="form-group col-lg-4">
-                            <label>Tampilkan Beberapa</label>
-                            <select class="form-control" name="tampil">
-                                <option value="10">Default</option>
-                                <option value="20">10</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                            </select>
-                        </div>                                                
-                        <div class="form-group col-lg-4">
-                            <label>Filter Tipe</label>
-                            <select class="form-control" name="tipe">
-                                <option value="">Semua</option>
-                                <option value="Penambahan Saldo">Penambahan</option>
-                                <option value="Pengurangan Saldo">Pengurangan</option>
-                            </select>
-                        </div>                                                
-                        <div class="form-group col-lg-4">
-                            <label>Submit</label>
-                            <button type="submit" class="btn btn-block btn-dark">Filter</button>
-                        </div>
-                    </div>
-                </form>
-
-                <div class="table-responsive">
-                    <table class="table table-striped table-bordered nowrap m-0">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Icon</th>
-                                <th>Tipe</th>
-                                <th>Waktu</th>
-                                <th>Nominal</th>
-                                <th>Keterangan</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php 
-                                // start paging config
-                                if (isset($_GET['tipe'])) {
-                                    $cari_tipe = $conn->real_escape_string(filter($_GET['tipe']));
-                                    $cek_data = "SELECT * FROM history_saldo WHERE aksi LIKE '%$cari_tipe%' AND username = '$sess_username' ORDER BY id DESC"; // edit
-                                    } else {
-                                    $cek_data = "SELECT * FROM history_saldo WHERE username = '$sess_username' ORDER BY id DESC"; // edit
-                                    }
-                                    if (isset($_GET['tipe'])) {
-                                        $cari_urut = $conn->real_escape_string(filter($_GET['tampil']));
-                                    $records_per_page = $cari_urut; // edit
-                                    } else {
-                                    $records_per_page = 10; // edit
-                                    }
-
-                                    $starting_position = 0;
-                                    if(isset($_GET["halaman"])) {
-                                        $starting_position = ($conn->real_escape_string(filter($_GET["halaman"]))-1) * $records_per_page;
-                                    }
-                                    $new_query = $cek_data." LIMIT $starting_position, $records_per_page";
-                                    $new_query = $conn->query($new_query);
-                                    $no = $starting_position+1;
-                                    // end paging config
-                                    while ($view_data = $new_query->fetch_assoc()) {
-                                        if ($view_data['aksi'] == "Penambahan Saldo") {
-                                            $label = "success";
-                                            $icon = "+";
-                                        } else if ($view_data['aksi'] == "Pengurangan Saldo") {
-                                            $label = "danger";
-                                            $icon = "-";
-                                        }
-                            ?>
-                            <tr>
-                                <td><?php echo $no++; ?></td>
-                                <td><span class="badge badge-pill badge-<?php echo $label; ?>"><?php echo $icon; ?></span></td>
-                                <td width="20%"><span class="badge badge-<?php echo $label; ?>"><?php echo $view_data['aksi']; ?></span></td>
-                                <td><?php echo tanggal_indo($view_data['date']); ?>, <?php echo $view_data['time']; ?></td>
-                                <td width="20%"><span class="badge badge-pill badge-<?php echo $label; ?>">Rp <?php echo $icon; ?>  <?php echo number_format($view_data['nominal'],0,',','.'); ?></span></td>
-                                <td><?php echo $view_data['pesan']; ?></td>
-                            </tr>   
-                            <?php } ?>
-                        </tbody>
-                    </table>
-                    <br>
-                    <ul class="pagination">
-                        <?php
-                            // start paging link
-                            if (isset($_GET['tipe'])) {
-                                $cari_urut = $conn->real_escape_string(filter($_GET['tampil']));
-                            } else {
-                                $cari_urut =  10;
-                            }  
-                            if (isset($_GET['tipe'])) {
-                                $cari_tipe = $conn->real_escape_string(filter($_GET['tipe']));
-                                $cari_urut = $conn->real_escape_string(filter($_GET['tampil']));
-                                $self = $_SERVER['PHP_SELF'];
-                            } else {
-                                $self = $_SERVER['PHP_SELF'];
-                            }
-                            $cek_data = $conn->query($cek_data);
-                            $total_records = mysqli_num_rows($cek_data);
-                            echo "<li class='disabled page-item'><a class='page-link' href='#'>Total: ".$total_records."</a></li>";
-                            if($total_records > 0) {
-                                $total_pages = ceil($total_records/$records_per_page);
-                                $current_page = 1;
-                                if(isset($_GET["halaman"])) {
-                                    $current_page = $conn->real_escape_string(filter($_GET["halaman"]));
-                                    if ($current_page < 1) {
-                                        $current_page = 1;
-                                    }
-                                }
-                                if($current_page > 1) {
-                                    $previous = $current_page-1;
-                                    if (isset($_GET['tipe'])) {
-                                        $cari_tipe = $conn->real_escape_string(filter($_GET['tipe']));
-                                        $cari_urut = $conn->real_escape_string(filter($_GET['tampil']));
-                                        echo "<li class='page-item'><a class='page-link' href='".$self."?halaman=1&tampil=".$cari_urut."&tipe=".$cari_tipe."'><<</a></li>";
-                                        echo "<li class='page-item'><a class='page-link' href='".$self."?halaman=".$previous."&tampil=".$cari_urut."&tipe=".$cari_tipe."'><</a></li>";
-                                    } else {
-                                        echo "<li class='page-item'><a class='page-link' href='".$self."?halaman=1'><<</a></li>";
-                                        echo "<li class='page-item'><a class='page-link' href='".$self."?halaman=".$previous."'><</a></li>";
-                                    }
-                                }
-                                // limit page
-                                $limit_page = $current_page+3;
-                                $limit_show_link = $total_pages-$limit_page;
-                                if ($limit_show_link < 0) {
-                                    $limit_show_link2 = $limit_show_link*2;
-                                    $limit_link = $limit_show_link - $limit_show_link2;
-                                    $limit_link = 3 - $limit_link;
-                                } else {
-                                    $limit_link = 3;
-                                }
-                                $limit_page = $current_page+$limit_link;
-                                // end limit page
-                                // start page
-                                if ($current_page == 1) {
-                                    $start_page = 1;
-                                } else if ($current_page > 1) {
-                                    if ($current_page < 4) {
-                                        $min_page  = $current_page-1;
-                                    } else {
-                                        $min_page  = 3;
-                                    }
-                                    $start_page = $current_page-$min_page;
-                                } else {
-                                    $start_page = $current_page;
-                                }
-                                // end start page
-                                for($i=$start_page; $i<=$limit_page; $i++) {
-                                    if (isset($_GET['tipe'])) {
-                                        $cari_tipe = $conn->real_escape_string(filter($_GET['tipe']));
-                                        $cari_urut = $conn->real_escape_string(filter($_GET['tampil']));
-                                        if($i==$current_page) {
-                                            echo "<li class='active page-item'><a class='page-link' href='#'>".$i."</a></li>";
-                                        } else {
-                                            echo "<li class='page-item'><a class='page-link' href='".$self."?halaman=".$i."&tampil=".$cari_urut."&tipe=".$cari_tipe."'>".$i."</a></li>";
-                                        }
-                                    } else {
-                                        if($i==$current_page) {
-                                            echo "<li class='active page-item'><a class='page-link' href='#'>".$i."</a></li>";
-                                        } else {
-                                            echo "<li class='page-item'><a class='page-link' href='".$self."?halaman=".$i."'>".$i."</a></li>";
-                                        }        
-                                    }
-                                }
-                                if($current_page!=$total_pages) {
-                                    $next = $current_page+1;
-                                    if (isset($_GET['tipe'])) {
-                                        $cari_tipe = $conn->real_escape_string(filter($_GET['tipe']));
-                                        $cari_urut = $conn->real_escape_string(filter($_GET['tampil']));
-                                        echo "<li class='page-item'><a class='page-link' href='".$self."?halaman=".$next."&tampil=".$cari_urut."&tipe=".$cari_tipe."'>></a></li>";
-                                        echo "<li class='page-item'><a class='page-link' href='".$self."?halaman=".$total_pages."&tampil=".$cari_urut."&tipe=".$cari_tipe."'>>></a></li>";
-                                    } else {
-                                        echo "<li class='page-item'><a class='page-link' href='".$self."?halaman=".$next."'>></a></li>";
-                                        echo "<li class='page-item'><a class='page-link' href='".$self."?halaman=".$total_pages."'>>></a></li>";
-                                    }
-                                }
-                            }
-                            // end paging link
-                        ?>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
+<title>Mutasi Saldo — Wallet</title>
+<meta name="description" content="Riwayat perubahan saldo akun.">
+<style>
+.w-page{max-width:1100px;margin:0 auto;padding:8px 0 90px}.w-hero{display:flex;justify-content:space-between;gap:20px;align-items:end;padding:26px;border-radius:26px;background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;margin-bottom:18px}.w-kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.7}.w-hero h1{margin:6px 0;font-weight:800}.w-total{font-size:13px;opacity:.78}.w-filter{display:flex;gap:10px;flex-wrap:wrap;padding:15px;border-radius:20px;background:#f8fafc;margin-bottom:16px}.w-filter select,.w-filter button{border-radius:13px;height:44px}.w-table{overflow:hidden;border:1px solid #e5e7eb;border-radius:22px;background:#fff}.w-row{display:grid;grid-template-columns:50px 1.2fr 1fr 2fr;gap:15px;align-items:center;padding:16px 18px;border-bottom:1px solid #eef2f7}.w-row:last-child{border-bottom:0}.w-head{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;background:#f8fafc}.w-type{font-weight:700}.w-plus{color:#059669}.w-minus{color:#dc2626}.w-amount{font-weight:800}.w-muted{color:#64748b;font-size:12px}.w-empty{text-align:center;padding:55px 20px;color:#64748b}.w-pages{display:flex;gap:7px;justify-content:center;margin-top:16px;flex-wrap:wrap}.w-pages a{padding:9px 13px;border-radius:11px;background:#f1f5f9;color:#334155;text-decoration:none}.w-pages a.active{background:#0f172a;color:#fff}@media(max-width:650px){.w-hero{display:block}.w-row{grid-template-columns:38px 1fr}.w-row>*:nth-child(3),.w-row>*:nth-child(4){grid-column:2}.w-head{display:none}.w-filter>*{flex:1;min-width:130px}}
+</style>
+<div class="w-page">
+<section class="w-hero"><div><div class="w-kicker">Wallet Center</div><h1>Mutasi Saldo</h1><div class="w-total"><?=number_format($total,0,',','.')?> transaksi tercatat</div></div><a href="/pay" class="btn btn-light" style="border-radius:14px"><i class="mdi mdi-plus"></i> Deposit</a></section>
+<form class="w-filter" method="get"><select class="form-control" name="tampil"><option value="10" <?=$limit===10?'selected':''?>>10 transaksi</option><option value="20" <?=$limit===20?'selected':''?>>20 transaksi</option><option value="50" <?=$limit===50?'selected':''?>>50 transaksi</option><option value="100" <?=$limit===100?'selected':''?>>100 transaksi</option></select><select class="form-control" name="tipe"><option value="">Semua perubahan</option><option value="Penambahan Saldo" <?=$type==='Penambahan Saldo'?'selected':''?>>Penambahan</option><option value="Pengurangan Saldo" <?=$type==='Pengurangan Saldo'?'selected':''?>>Pengurangan</option></select><button class="btn btn-dark" type="submit"><i class="mdi mdi-filter-variant"></i> Filter</button></form>
+<div class="w-table"><div class="w-row w-head"><div>#</div><div>Jenis</div><div>Nominal</div><div>Waktu / Keterangan</div></div><?php if(!$rows):?><div class="w-empty"><i class="mdi mdi-history" style="font-size:42px"></i><h4>Belum ada mutasi</h4><p class="mb-0">Transaksi perubahan saldo akan muncul di sini.</p></div><?php else: foreach($rows as $i=>$r):$plus=$r['aksi']==='Penambahan Saldo';?><div class="w-row"><div><?=($offset+$i+1)?></div><div class="w-type <?=$plus?'w-plus':'w-minus'?>"><i class="mdi <?=$plus?'mdi-arrow-down-left':'mdi-arrow-up-right'?>"></i> <?=$plus?'Penambahan':'Pengurangan'?><div class="w-muted"><?=htmlspecialchars((string)$r['aksi'],ENT_QUOTES,'UTF-8')?></div></div><div class="w-amount <?=$plus?'w-plus':'w-minus'?>"><?=$plus?'+':'-'>?> Rp <?=number_format((int)$r['nominal'],0,',','.')?></div><div><div><?=function_exists('tanggal_indo')?htmlspecialchars((string)tanggal_indo($r['date']),ENT_QUOTES,'UTF-8'):(string)$r['date']?>, <?=htmlspecialchars((string)$r['time'],ENT_QUOTES,'UTF-8')?></div><div class="w-muted"><?=htmlspecialchars((string)$r['pesan'],ENT_QUOTES,'UTF-8')?></div></div></div><?php endforeach;endif;?></div>
+<?php if($pages>1):?><div class="w-pages"><?php if($page>1):?><a href="<?=walletUrl($page-1,$limit,$type)?>">‹</a><?php endif; for($i=max(1,$page-2);$i<=min($pages,$page+2);$i++):?><a class="<?=$i===$page?'active':''?>" href="<?=walletUrl($i,$limit,$type)?>"><?=$i?></a><?php endfor;if($page<$pages):?><a href="<?=walletUrl($page+1,$limit,$type)?>">›</a><?php endif;?></div><?php endif;?>
 </div>
-
-<?php
-require '../lib/footer.php';
-?>
+<nav class="p4-mobile-bottom"><a href="/"><i class="mdi mdi-home-outline"></i>Home</a><a href="/pemesanan"><i class="mdi mdi-storefront-outline"></i>Layanan</a><a href="/riwayat/pemesanan-digital"><i class="mdi mdi-receipt-text-outline"></i>Order</a><a class="active" href="/user/mutasi"><i class="mdi mdi-wallet-outline"></i>Saldo</a></nav>
+<?php require_once __DIR__ . '/../lib/footer.php'; ?>
