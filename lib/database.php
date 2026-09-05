@@ -1,53 +1,17 @@
 <?php
 declare(strict_types=1);
-
-if (!isset($conn) || !($conn instanceof mysqli)) {
-    error_log('Panel CEIR: database.php loaded without a valid mysqli connection.');
-    return;
-}
-
-if (!function_exists('panel_db_query')) {
-    function panel_db_query(mysqli $db, string $sql): mysqli_result|bool {
-        $result = $db->query($sql);
-        if ($result === false) error_log('Panel CEIR SQL error: '.$db->error.' | SQL: '.preg_replace('/\s+/', ' ', $sql));
-        return $result;
-    }
-}
-if (!function_exists('panel_db_count')) {
-    function panel_db_count(mysqli $db, string $table, string $where='1=1'): int {
-        if (!preg_match('/^[A-Za-z0-9_]+$/',$table) || !preg_match('/^[A-Za-z0-9_\s=\'().<>`,%-]+$/',$where) || str_contains($where,';') || str_contains($where,'--')) return 0;
-        $r=panel_db_query($db,"SELECT COUNT(*) AS total FROM `{$table}` WHERE {$where}");
-        if(!$r)return 0;$row=$r->fetch_assoc();$r->free();return (int)($row['total']??0);
-    }
-}
-if (!function_exists('panel_db_sum')) {
-    function panel_db_sum(mysqli $db,string $table,string $column,string $where='1=1'): float {
-        if(!preg_match('/^[A-Za-z0-9_]+$/',$table)||!preg_match('/^[A-Za-z0-9_]+$/',$column)||!preg_match('/^[A-Za-z0-9_\s=\'().<>`,%-]+$/',$where)||str_contains($where,';')||str_contains($where,'--'))return 0.0;
-        $r=panel_db_query($db,"SELECT COALESCE(SUM(`{$column}`),0) AS total FROM `{$table}` WHERE {$where}");
-        if(!$r)return 0.0;$row=$r->fetch_assoc();$r->free();return (float)($row['total']??0);
-    }
-}
-
-$data=['short_title'=>'SCARD PROJECT','title'=>'SCARD PROJECT'];
-if($q=panel_db_query($conn,"SELECT * FROM `setting_web` WHERE id=1 LIMIT 1")){if($r=$q->fetch_assoc())$data=array_merge($data,$r);$q->free();}
-$sess_username=trim((string)($sess_username??($_SESSION['user']['username']??'')));
-$data_user=['username'=>$sess_username,'nama'=>'','email'=>'','no_hp'=>'','saldo'=>0,'level'=>'Member','status'=>'Aktif','api_key'=>''];
-if($sess_username!==''){$u=$conn->real_escape_string($sess_username);if($q=panel_db_query($conn,"SELECT * FROM `users` WHERE username='{$u}' LIMIT 1")){if($r=$q->fetch_assoc())$data_user=array_merge($data_user,$r);$q->free();}}
-
-$tables=['layanan_sosmed','layanan_sosmed2','layanan_sosmed3','layanan_pulsa','layanan_digital'];
-foreach($tables as $t)${$t}=panel_db_count($conn,$t);
-$total_layanan=array_sum(array_map(fn($t)=>(int)${$t},$tables));$total_pengguna=panel_db_count($conn,'users');
-foreach(['bank'=>'deposit_bank','emoney'=>'deposit_emoney','epayment'=>'deposit_epayment','tsel'=>'deposit_tsel','lain'=>'deposit'] as $k=>$t)${'jumlah_deposit_'.$k.'_member'}=panel_db_count($conn,$t,"status='Success'");
-$jumlah_deposit_voucher_member=panel_db_count($conn,'voucher',"status='sudah di redeem'");$jumlah_deposit_member=$jumlah_deposit_bank_member+$jumlah_deposit_emoney_member+$jumlah_deposit_epayment_member+$jumlah_deposit_tsel_member+$jumlah_deposit_voucher_member+$jumlah_deposit_lain_member;
-foreach(['bank'=>['deposit_bank','jumlah_transfer',"status='Success'"],'emoney'=>['deposit_emoney','jumlah_transfer',"status='Success'"],'epayment'=>['deposit_epayment','jumlah_transfer',"status='Success'"],'tsel'=>['deposit_tsel','jumlah_transfer',"status='Success'"],'voucher'=>['voucher','saldo',"status='sudah di redeem'"],'lain'=>['deposit','jumlah_transfer',"status='Success'"]] as $k=>$v)${'data_deposit_'.$k}=['total'=>panel_db_sum($conn,$v[0],$v[1],$v[2])];
-$jumlah_pesanan_pulsa=panel_db_count($conn,'pembelian_pulsa',"status='Success'");$jumlah_pesanan_sosmed=panel_db_count($conn,'pembelian_sosmed',"status='Success'");$data_pesanan_pulsa=['total'=>panel_db_sum($conn,'pembelian_pulsa','harga',"status='Success'")];$data_pesanan_sosmed=['total'=>panel_db_sum($conn,'pembelian_sosmed','harga',"status='Success'")];
-$data_saldo_member=['total'=>panel_db_sum($conn,'users','saldo',"level IN ('Member','Agen','Reseller')")];$data_transaksi_member=['total'=>panel_db_sum($conn,'users','pemakaian_saldo',"level IN ('Member','Agen','Reseller')")];
-$month=date('m');$year=date('Y');
-foreach(['Pulsa'=>['pembelian_pulsa','profit'],'Sosmed'=>['pembelian_sosmed','profit'],'Digital'=>['pembelian_digital','profit']] as $k=>$v){${'Profit'.$k}=['total'=>panel_db_sum($conn,$v[0],$v[1],"MONTH(`date`)='{$month}' AND YEAR(`date`)='{$year}'")];${'All'.$k}=['total'=>panel_db_sum($conn,$v[0],'harga',"MONTH(`date`)='{$month}' AND YEAR(`date`)='{$year}'")];${'CountProfit'.$k}=panel_db_count($conn,$v[0],"MONTH(`date`)='{$month}' AND YEAR(`date`)='{$year}'");}
-$u=$conn->real_escape_string($sess_username);$jumlah_order_sosmed=panel_db_count($conn,'pembelian_sosmed',"user='{$u}'");$jumlah_order_pulsa=panel_db_count($conn,'pembelian_pulsa',"user='{$u}'");$jumlah_order_digital=panel_db_count($conn,'pembelian_digital',"user='{$u}'");
-foreach(['lain'=>'deposit','bank'=>'deposit_bank','emoney'=>'deposit_emoney','epayment'=>'deposit_epayment','tsel'=>'deposit_tsel','voucher'=>'deposit_voucher'] as $k=>$t)${'jumlah_deposit_'.$k}=panel_db_count($conn,$t,"username='{$u}' AND status='Success'");$jumlah_deposit_user=$jumlah_deposit_lain+$jumlah_deposit_bank+$jumlah_deposit_emoney+$jumlah_deposit_epayment+$jumlah_deposit_tsel+$jumlah_deposit_voucher;
-$data_order_sosmed=['total'=>panel_db_sum($conn,'pembelian_sosmed','harga',"user='{$u}'")];$data_order_pulsa=['total'=>panel_db_sum($conn,'pembelian_pulsa','harga',"user='{$u}'")];$data_order_digital=['total'=>panel_db_sum($conn,'pembelian_digital','harga',"user='{$u}'")];
+if (!isset($conn) || !($conn instanceof mysqli)) { error_log('Panel CEIR: database.php loaded without valid mysqli connection.'); return; }
+if (!function_exists('panel_db_query')) { function panel_db_query(mysqli $db,string $sql):mysqli_result|bool { $r=$db->query($sql); if($r===false)error_log('Panel CEIR SQL error: '.$db->error.' | SQL: '.preg_replace('/\s+/',' ',$sql)); return $r; } }
+if (!function_exists('panel_db_count')) { function panel_db_count(mysqli $db,string $table,string $where='1=1'):int { if(!preg_match('/^[A-Za-z0-9_]+$/',$table)||!preg_match('/^[A-Za-z0-9_\s=\'().<>`,%-]+$/',$where)||str_contains($where,';')||str_contains($where,'--'))return 0; $r=panel_db_query($db,"SELECT COUNT(*) AS total FROM `{$table}` WHERE {$where}");if(!$r)return 0;$row=$r->fetch_assoc();$r->free();return(int)($row['total']??0); } }
+if (!function_exists('panel_db_sum')) { function panel_db_sum(mysqli $db,string $table,string $column,string $where='1=1'):float { if(!preg_match('/^[A-Za-z0-9_]+$/',$table)||!preg_match('/^[A-Za-z0-9_]+$/',$column)||!preg_match('/^[A-Za-z0-9_\s=\'().<>`,%-]+$/',$where)||str_contains($where,';')||str_contains($where,'--'))return 0.0;$r=panel_db_query($db,"SELECT COALESCE(SUM(`{$column}`),0) AS total FROM `{$table}` WHERE {$where}");if(!$r)return 0.0;$row=$r->fetch_assoc();$r->free();return(float)($row['total']??0); } }
+$data=['short_title'=>'SCARD PROJECT','title'=>'SCARD PROJECT'];if($q=panel_db_query($conn,"SELECT * FROM setting_web WHERE id=1 LIMIT 1")){if($r=$q->fetch_assoc())$data=array_merge($data,$r);$q->free();}
+$sess_username=trim((string)($sess_username??($_SESSION['user']['username']??'')));$data_user=['username'=>$sess_username,'nama'=>'','email'=>'','no_hp'=>'','saldo'=>0,'level'=>'Member','status'=>'Aktif','api_key'=>''];$u=$conn->real_escape_string($sess_username);if($u!==''&&($q=panel_db_query($conn,"SELECT * FROM users WHERE username='{$u}' LIMIT 1"))){if($r=$q->fetch_assoc())$data_user=array_merge($data_user,$r);$q->free();}
+$tables=['layanan_sosmed','layanan_sosmed2','layanan_sosmed3','layanan_pulsa','layanan_digital'];foreach($tables as $t){${$t}=panel_db_count($conn,$t);}$total_layanan=array_sum(array_map(fn($t)=>(int)${$t},$tables));$total_pengguna=panel_db_count($conn,'users');
+foreach(['bank'=>'deposit_bank','emoney'=>'deposit_emoney','epayment'=>'deposit_epayment','tsel'=>'deposit_tsel','lain'=>'deposit'] as $k=>$t)${'jumlah_deposit_'.$k.'_member'}=panel_db_count($conn,$t,"status='Success'");$jumlah_deposit_voucher_member=panel_db_count($conn,'voucher',"status='sudah di redeem'");$jumlah_deposit_member=$jumlah_deposit_bank_member+$jumlah_deposit_emoney_member+$jumlah_deposit_epayment_member+$jumlah_deposit_tsel_member+$jumlah_deposit_voucher_member+$jumlah_deposit_lain_member;
+foreach(['bank'=>['deposit_bank','jumlah_transfer'],'emoney'=>['deposit_emoney','jumlah_transfer'],'epayment'=>['deposit_epayment','jumlah_transfer'],'tsel'=>['deposit_tsel','jumlah_transfer'],'voucher'=>['voucher','saldo'],'lain'=>['deposit','jumlah_transfer']] as $k=>$v)${'data_deposit_'.$k}=['total'=>panel_db_sum($conn,$v[0],$v[1],"status='Success'")];
+$jumlah_pesanan_pulsa=panel_db_count($conn,'pembelian_pulsa',"status='Success'");$jumlah_pesanan_sosmed=panel_db_count($conn,'pembelian_sosmed',"status='Success'");$data_pesanan_pulsa=['total'=>panel_db_sum($conn,'pembelian_pulsa','harga',"status='Success'")];$data_pesanan_sosmed=['total'=>panel_db_sum($conn,'pembelian_sosmed','harga',"status='Success'")];$data_saldo_member=['total'=>panel_db_sum($conn,'users','saldo',"level IN ('Member','Agen','Reseller')")];$data_transaksi_member=['total'=>panel_db_sum($conn,'users','pemakaian_saldo',"level IN ('Member','Agen','Reseller')")];
+$month=date('m');$year=date('Y');foreach(['Pulsa'=>['pembelian_pulsa','profit'],'Sosmed'=>['pembelian_sosmed','profit'],'Digital'=>['pembelian_digital','profit']] as $k=>$v){${'Profit'.$k}=['total'=>panel_db_sum($conn,$v[0],$v[1],"MONTH(`date`)='{$month}' AND YEAR(`date`)='{$year}'")];${'All'.$k}=['total'=>panel_db_sum($conn,$v[0],'harga',"MONTH(`date`)='{$month}' AND YEAR(`date`)='{$year}'")];${'CountProfit'.$k}=panel_db_count($conn,$v[0],"MONTH(`date`)='{$month}' AND YEAR(`date`)='{$year}'");}
+$jumlah_order_sosmed=panel_db_count($conn,'pembelian_sosmed',"user='{$u}'");$jumlah_order_pulsa=panel_db_count($conn,'pembelian_pulsa',"user='{$u}'");$jumlah_order_digital=panel_db_count($conn,'pembelian_digital',"user='{$u}'");foreach(['lain'=>'deposit','bank'=>'deposit_bank','emoney'=>'deposit_emoney','epayment'=>'deposit_epayment','tsel'=>'deposit_tsel','voucher'=>'deposit_voucher'] as $k=>$t)${'jumlah_deposit_'.$k}=panel_db_count($conn,$t,"username='{$u}' AND status='Success'");$jumlah_deposit_user=$jumlah_deposit_lain+$jumlah_deposit_bank+$jumlah_deposit_emoney+$jumlah_deposit_epayment+$jumlah_deposit_tsel+$jumlah_deposit_voucher;$data_order_sosmed=['total'=>panel_db_sum($conn,'pembelian_sosmed','harga',"user='{$u}'")];$data_order_pulsa=['total'=>panel_db_sum($conn,'pembelian_pulsa','harga',"user='{$u}'")];$data_order_digital=['total'=>panel_db_sum($conn,'pembelian_digital','harga',"user='{$u}'")];
 $empty=$conn->query('SELECT 1 WHERE 0');$legacyResultNames=['CallDBDepositBankPending','CallDBDepositEmoneyPending','CallDBDepositEpaymentPending','CallDBDepositTselPending','CallDBDepositOperPending','AllOrderSosmedPending','AllOrderSosmedProcessing','AllOrderSosmedInprogress','AllOrderSosmedError','AllOrderSosmedPartial','AllOrderSosmedSuccess','AllOrderPulsaPending','AllOrderPulsaProcessing','AllOrderPulsaInprogress','AllOrderPulsaError','AllOrderPulsaPartial','AllOrderPulsaSuccess','AllOrderDigitalPending','AllOrderDigitalProcessing','AllOrderDigitalError','AllOrderDigitalPartial','AllOrderDigitalSuccess','CallDBOrderSosmedPending','CallDBOrderSosmedProcessing','CallDBOrderSosmedError','CallDBOrderSosmedPartial','CallDBOrderSosmedSuccess','CallDBOrderPulsaPending','CallDBOrderPulsaProcessing','CallDBOrderPulsaError','CallDBOrderPulsaPartial','CallDBOrderPulsaSuccess','CallDBOrderDigitalPending','CallDBOrderDigitalProcessing','CallDBOrderDigitalError','CallDBOrderDigitalPartial','CallDBOrderDigitalSuccess','AllDepositUsersBank','AllDepositUsersEmoney','AllDepositUsersEpayment','AllDepositUsersTsel','AllDepositUsersVoucher','AllDepositUsersLain','AllTiketUsersClosed','AllTiketUsersPending','AllTiketUsersOpen','AllTiketUsersProcessing','AllTiketUsersSolved'];foreach($legacyResultNames as $name)${$name}=$empty;
-$PageContact=[];if($q=panel_db_query($conn,"SELECT * FROM halaman WHERE id='1'")){ $PageContact=$q->fetch_assoc()?:[];$q->free(); }
-foreach(['CallDBDepositBankPending'=>'deposit_bank','CallDBDepositEmoneyPending'=>'deposit_emoney','CallDBDepositEpaymentPending'=>'deposit_epayment','CallDBDepositTselPending'=>'deposit_tsel','CallDBDepositOperPending'=>'deposit'] as $name=>$t){$q=panel_db_query($conn,"SELECT * FROM {$t} WHERE username='{$u}' AND status='Pending'");if($q)${$name}=$q;}
+$PageContact=[];if($q=panel_db_query($conn,"SELECT * FROM halaman WHERE id='1'")){$PageContact=$q->fetch_assoc()?:[];$q->free();}foreach(['CallDBDepositBankPending'=>'deposit_bank','CallDBDepositEmoneyPending'=>'deposit_emoney','CallDBDepositEpaymentPending'=>'deposit_epayment','CallDBDepositTselPending'=>'deposit_tsel','CallDBDepositOperPending'=>'deposit'] as $name=>$t){$q=panel_db_query($conn,"SELECT * FROM {$t} WHERE username='{$u}' AND status='Pending'");if($q)${$name}=$q;}
 ?>
